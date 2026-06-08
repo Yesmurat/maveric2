@@ -62,7 +62,10 @@ module decode_stage
     output logic                     a0_reg_lsb_o,
     output logic                     load_instr_o,
     output logic                     is_mdu_op_o,
-    output logic                     is_mdu_word_op_o
+    output logic                     is_mdu_word_op_o,
+    output logic                     csr_instr_o,
+    output logic                     csr_imm_o,
+    output logic [             11:0] csr_addr_o
 );
 
     //-------------------------------------
@@ -131,7 +134,9 @@ module decode_stage
         .cause_o         (cause_o        ),
         .load_instr_o    (load_instr_o   ),
         .is_mdu_op_o     (is_mdu_op_o    ),
-        .is_mdu_word_op_o(is_mdu_word_op_o)
+        .is_mdu_word_op_o(is_mdu_word_op_o),
+        .csr_instr_o     (csr_instr_o    ),
+        .csr_imm_o       (csr_imm_o      )
     );
 
     // Extend immediate module.
@@ -172,4 +177,7 @@ module decode_stage
     // Log trace.
     assign log_trace_o       = log_trace_i;
     assign instruction_log_o = instruction_i;
+
+    // CSR address field (instruction[31:20]).
+    assign csr_addr_o = instruction_i[31:20];
 endmodule

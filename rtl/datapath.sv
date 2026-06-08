@@ -186,6 +186,20 @@ module datapath
     logic                     is_mdu_word_op_exec_in_s;
     logic                     mdu_busy_exec_out_s;
 
+    // CSR signals: decode → pipe_exec → execute.
+    logic                     csr_instr_dec_out_s;
+    logic                     csr_imm_dec_out_s;
+    logic [             11:0] csr_addr_dec_out_s;
+    logic                     csr_instr_exec_in_s;
+    logic                     csr_imm_exec_in_s;
+    logic [             11:0] csr_addr_exec_in_s;
+
+    // CSR read data: execute → pipe_mem → memory → pipe_wb → write_back.
+    logic [DATA_WIDTH  - 1:0] csr_rdata_exec_out_s;
+    logic [DATA_WIDTH  - 1:0] csr_rdata_mem_in_s;
+    logic [DATA_WIDTH  - 1:0] csr_rdata_mem_out_s;
+    logic [DATA_WIDTH  - 1:0] csr_rdata_wb_in_s;
+
 
     // Memory stage signals: Input interface.
     logic [ADDR_WIDTH - 1:0] pc_plus4_mem_in_s;
@@ -353,7 +367,10 @@ module datapath
         .a0_reg_lsb_o          (a0_reg_lsb_s                 ),
         .load_instr_o          (load_instr_dec_out_s         ),
         .is_mdu_op_o           (is_mdu_op_dec_out_s          ),
-        .is_mdu_word_op_o      (is_mdu_word_op_dec_out_s     )
+        .is_mdu_word_op_o      (is_mdu_word_op_dec_out_s     ),
+        .csr_instr_o           (csr_instr_dec_out_s          ),
+        .csr_imm_o             (csr_imm_dec_out_s            ),
+        .csr_addr_o            (csr_addr_dec_out_s           )
     );
 
     //-------------------------------------------------------------------------------
@@ -393,6 +410,9 @@ module datapath
         .load_instr_i          (load_instr_dec_out_s         ),
         .is_mdu_op_i           (is_mdu_op_dec_out_s          ),
         .is_mdu_word_op_i      (is_mdu_word_op_dec_out_s     ),
+        .csr_instr_i           (csr_instr_dec_out_s          ),
+        .csr_imm_i             (csr_imm_dec_out_s            ),
+        .csr_addr_i            (csr_addr_dec_out_s           ),
         .instruction_log_o     (instruction_log_exec_out_s   ),
         .log_trace_o           (log_trace_exec_in_s          ),
         .result_src_o          (result_src_exec_in_s         ),
@@ -421,7 +441,10 @@ module datapath
         .cause_o               (cause_exec_in_s              ),
         .load_instr_o          (load_instr_exec_in_s         ),
         .is_mdu_op_o           (is_mdu_op_exec_in_s          ),
-        .is_mdu_word_op_o      (is_mdu_word_op_exec_in_s     )
+        .is_mdu_word_op_o      (is_mdu_word_op_exec_in_s     ),
+        .csr_instr_o           (csr_instr_exec_in_s          ),
+        .csr_imm_o             (csr_imm_exec_in_s            ),
+        .csr_addr_o            (csr_addr_exec_in_s           )
     );
 
     //-------------------------------------
@@ -462,6 +485,9 @@ module datapath
         .log_trace_i           (log_trace_exec_in_s          ),
         .is_mdu_op_i           (is_mdu_op_exec_in_s          ),
         .is_mdu_word_op_i      (is_mdu_word_op_exec_in_s     ),
+        .csr_instr_i           (csr_instr_exec_in_s          ),
+        .csr_imm_i             (csr_imm_exec_in_s            ),
+        .csr_addr_i            (csr_addr_exec_in_s           ),
         .pc_log_o              (pc_log_exec_out_s            ),
         .pc_plus4_o            (pc_plus4_exec_out_s          ),
         .pc_new_o              (pc_new_exec_out_s            ),
@@ -487,7 +513,8 @@ module datapath
         .cause_o               (cause_exec_out_s             ),
         .log_trace_o           (log_trace_exec_out_s         ),
         .load_instr_o          (load_instr_exec_o            ),
-        .mdu_busy_o            (mdu_busy_exec_out_s          )
+        .mdu_busy_o            (mdu_busy_exec_out_s          ),
+        .csr_rdata_o           (csr_rdata_exec_out_s         )
     );
 
     assign pc_target_addr_fetch_in_s = pc_new_exec_out_s;
@@ -521,6 +548,7 @@ module datapath
         .ecall_instr_i     (ecall_instr_exec_out_s    ),
         .cause_i           (cause_exec_out_s          ),
         .rd_addr_i         (rd_addr_exec_out_s        ),
+        .csr_rdata_i       (csr_rdata_exec_out_s      ),
         .instruction_log_o (instruction_log_mem_out_s ),
         .pc_log_o          (pc_log_mem_in_s           ),
         .log_trace_o       (log_trace_mem_in_s        ),
@@ -537,7 +565,8 @@ module datapath
         .mem_access_o      (mem_access_mem_in_s       ),
         .ecall_instr_o     (ecall_instr_mem_in_s      ),
         .cause_o           (cause_mem_in_s            ),
-        .rd_addr_o         (rd_addr_mem_in_s          )
+        .rd_addr_o         (rd_addr_mem_in_s          ),
+        .csr_rdata_o       (csr_rdata_mem_in_s        )
     );
 
     assign axi_read_addr_data_o = alu_result_mem_in_s;
@@ -584,6 +613,7 @@ module datapath
         .log_trace_i          (log_trace_mem_in_s          ),
         .pc_log_i             (pc_log_mem_in_s             ),
         .mem_access_i         (mem_access_mem_in_s         ),
+        .csr_rdata_i          (csr_rdata_mem_in_s          ),
         .pc_plus4_o           (pc_plus4_mem_out_s          ),
         .pc_target_addr_o     (pc_target_addr_mem_out_s    ),
         .forward_value_o      (forward_value_mem_out_s     ),
@@ -604,7 +634,8 @@ module datapath
         .mem_write_data_log_o (mem_write_data_log_mem_out_s),
         .mem_we_log_o         (mem_we_log_mem_out_s        ),
         .mem_access_log_o     (mem_access_log_mem_out_s    ),
-        .reg_we_o             (reg_we_mem_out_s            )
+        .reg_we_o             (reg_we_mem_out_s            ),
+        .csr_rdata_o          (csr_rdata_mem_out_s         )
     );
 
     assign forward_value_exec_in_s = forward_value_mem_out_s;
@@ -630,6 +661,7 @@ module datapath
         .imm_ext_i            (imm_ext_mem_out_s           ),
         .alu_result_i         (alu_result_mem_out_s        ),
         .read_data_i          (read_data_mem_out_s         ),
+        .csr_rdata_i          (csr_rdata_mem_out_s         ),
         .ecall_instr_i        (ecall_instr_mem_out_s       ),
         .cause_i              (cause_mem_out_s             ),
         .rd_addr_i            (rd_addr_mem_out_s           ),
@@ -647,6 +679,7 @@ module datapath
         .imm_ext_o            (imm_ext_wb_in_s             ),
         .alu_result_o         (alu_result_wb_in_s          ),
         .read_data_o          (read_data_wb_in_s           ),
+        .csr_rdata_o          (csr_rdata_wb_in_s           ),
         .ecall_instr_o        (ecall_instr_wb_in_s         ),
         .cause_o              (cause_wb_in_s               ),
         .rd_addr_o            (rd_addr_wb_in_s             )
@@ -660,6 +693,7 @@ module datapath
         .pc_target_addr_i     (pc_target_addr_wb_in_s    ),
         .alu_result_i         (alu_result_wb_in_s        ),
         .read_data_i          (read_data_wb_in_s         ),
+        .csr_rdata_i          (csr_rdata_wb_in_s         ),
         .rd_addr_i            (rd_addr_wb_in_s           ),
         .imm_ext_i            (imm_ext_wb_in_s           ),
         .result_src_i         (result_src_wb_in_s        ),

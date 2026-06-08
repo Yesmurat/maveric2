@@ -40,6 +40,7 @@ module memory_stage
     input  logic                     log_trace_i,
     input  logic [ADDR_WIDTH  - 1:0] pc_log_i,
     input  logic                     mem_access_i,
+    input  logic [DATA_WIDTH  - 1:0] csr_rdata_i,
 
     // Output interface.
     output logic [ADDR_WIDTH  - 1:0] pc_plus4_o,
@@ -62,7 +63,8 @@ module memory_stage
     output logic [DATA_WIDTH  - 1:0] mem_write_data_log_o,
     output logic                     mem_we_log_o,
     output logic                     mem_access_log_o,
-    output logic                     reg_we_o
+    output logic                     reg_we_o,
+    output logic [DATA_WIDTH  - 1:0] csr_rdata_o
 );
 
     //-------------------------------------
@@ -125,11 +127,12 @@ module memory_stage
     );
 
     // Forwarding value MUX.
-    mux3to1 MUX0 (
+    mux4to1 MUX0 (
         .control_signal_i (forward_src_i  ),
         .mux_0_i          (alu_result_i    ),
         .mux_1_i          (pc_target_addr_i),
         .mux_2_i          (imm_ext_i       ),
+        .mux_3_i          (csr_rdata_i     ),
         .mux_o            (forward_value_o )
     );
 
@@ -155,6 +158,7 @@ module memory_stage
     assign mem_addr_log_o       = alu_result_i;
     assign mem_we_log_o         = mem_we_i;
     assign mem_access_log_o     = mem_access_i;
+    assign csr_rdata_o          = csr_rdata_i;
 
     always_comb begin
         case (store_type_s)

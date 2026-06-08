@@ -52,6 +52,9 @@ module execute_stage
     input  logic                    log_trace_i,
     input  logic                    is_mdu_op_i,
     input  logic                    is_mdu_word_op_i,
+    input  logic                    csr_instr_i,
+    input  logic                    csr_imm_i,
+    input  logic [            11:0] csr_addr_i,
 
     // Output interface.
     output logic [ADDR_WIDTH - 1:0] pc_log_o,
@@ -79,7 +82,8 @@ module execute_stage
     output logic [             3:0] cause_o,
     output logic                    log_trace_o,
     output logic                    load_instr_o,
-    output logic                    mdu_busy_o
+    output logic                    mdu_busy_o,
+    output logic [DATA_WIDTH - 1:0] csr_rdata_o
 );
 
     //-------------------------------------
@@ -92,6 +96,10 @@ module execute_stage
     logic [DATA_WIDTH - 1:0] alu_result_s;
     logic [DATA_WIDTH - 1:0] mdu_result_s;
     logic [ADDR_WIDTH - 1:0] pc_plus_imm_s;
+
+    logic [DATA_WIDTH - 1:0] csr_rdata_s;
+    logic [DATA_WIDTH - 1:0] csr_wdata_s;
+    logic [DATA_WIDTH - 1:0] csr_src_s;
     logic [ADDR_WIDTH - 1:0] rs1_plus_imm_s;
     logic [ADDR_WIDTH - 1:0] pc_target_addr_s;
 
@@ -183,6 +191,36 @@ module execute_stage
         .mux_o            (pc_new_s        )
     );
 
+
+    //--------------------------------------------------
+    // CSR datapath.
+    //--------------------------------------------------
+
+    // Source operand: forwarded rs1 for register variants, zero-extended uimm for immediate variants.
+    assign csr_src_s = csr_imm_i ? imm_ext_i : alu_srcA_s;
+
+    // Compute new CSR write value.
+    always_comb begin
+        case (alu_control_i[1:0])
+            2'b01: csr_wdata_s = csr_src_s;                 // CSRRW(I): replace
+            2'b10: csr_wdata_s = csr_rdata_s | csr_src_s;   // CSRRS(I): set bits
+            2'b11: csr_wdata_s = csr_rdata_s & ~csr_src_s;  // CSRRC(I): clear bits
+            default: csr_wdata_s = '0;
+        endcase
+    end
+
+    // Control Status Register File.
+    csr_regfile CSR_REG0 (
+        .clk_i         (clk_i      ),
+        .arst_i        (arst_i     ),
+        .raddr_i       (csr_addr_i ),
+        .rdata_o       (csr_rdata_s),
+        .waddr_i       (csr_addr_i ),
+        .wdata_i       (csr_wdata_s),
+        .we_i          (csr_instr_i)
+    );
+
+    assign csr_rdata_o = csr_rdata_s;
 
     //--------------------------------------------------
     // Branch decision & misprediction detection logic.

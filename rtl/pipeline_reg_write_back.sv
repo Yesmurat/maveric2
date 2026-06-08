@@ -38,6 +38,7 @@ module pipeline_reg_write_back
     input  logic [DATA_WIDTH - 1:0] imm_ext_i,
     input  logic [DATA_WIDTH - 1:0] alu_result_i,
     input  logic [DATA_WIDTH - 1:0] read_data_i,
+    input  logic [DATA_WIDTH - 1:0] csr_rdata_i,
     input  logic                    ecall_instr_i,
     input  logic [             3:0] cause_i,
     input  logic [REG_ADDR_W - 1:0] rd_addr_i,
@@ -57,6 +58,7 @@ module pipeline_reg_write_back
     output logic [DATA_WIDTH  - 1:0] imm_ext_o,
     output logic [DATA_WIDTH  - 1:0] alu_result_o,
     output logic [DATA_WIDTH  - 1:0] read_data_o,
+    output logic [DATA_WIDTH  - 1:0] csr_rdata_o,
     output logic                     ecall_instr_o,
     output logic [              3:0] cause_o,
     output logic [REG_ADDR_W  - 1:0] rd_addr_o
@@ -78,6 +80,7 @@ module pipeline_reg_write_back
             imm_ext_o            <= '0;
             alu_result_o         <= '0;
             read_data_o          <= '0;
+            csr_rdata_o          <= '0;
             ecall_instr_o        <= '0;
             cause_o              <= '0;
             rd_addr_o            <= '0;
@@ -95,6 +98,7 @@ module pipeline_reg_write_back
             imm_ext_o            <= imm_ext_i;
             alu_result_o         <= alu_result_i;
             read_data_o          <= read_data_i;
+            csr_rdata_o          <= csr_rdata_i;
             ecall_instr_o        <= ecall_instr_i;
             cause_o              <= cause_i;
             rd_addr_o            <= rd_addr_i;

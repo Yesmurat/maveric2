@@ -41,6 +41,7 @@ module pipeline_reg_memory
     input  logic                     ecall_instr_i,
     input  logic [              3:0] cause_i,
     input  logic [REG_ADDR_W  - 1:0] rd_addr_i,
+    input  logic [DATA_WIDTH  - 1:0] csr_rdata_i,
 
     // Output interface.
     output logic [INSTR_WIDTH - 1:0] instruction_log_o,
@@ -59,7 +60,8 @@ module pipeline_reg_memory
     output logic                     mem_access_o,
     output logic                     ecall_instr_o,
     output logic [              3:0] cause_o,
-    output logic [REG_ADDR_W  - 1:0] rd_addr_o
+    output logic [REG_ADDR_W  - 1:0] rd_addr_o,
+    output logic [DATA_WIDTH  - 1:0] csr_rdata_o
 );
 
     // Write logic.
@@ -82,6 +84,7 @@ module pipeline_reg_memory
             ecall_instr_o     <= '0;
             cause_o           <= '0;
             rd_addr_o         <= '0;
+            csr_rdata_o       <= '0;
         end else if (~ stall_mem_i) begin
             instruction_log_o <= instruction_log_i;
             pc_log_o          <= pc_log_i;
@@ -100,6 +103,7 @@ module pipeline_reg_memory
             ecall_instr_o     <= ecall_instr_i;
             cause_o           <= cause_i;
             rd_addr_o         <= rd_addr_i;
+            csr_rdata_o       <= csr_rdata_i;
         end
     end
 
