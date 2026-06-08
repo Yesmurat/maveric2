@@ -34,7 +34,9 @@ module control_unit
     output logic [3:0] cause_o,
     output logic       load_instr_o,
     output logic       is_mdu_op_o,
-    output logic       is_mdu_word_op_o
+    output logic       is_mdu_word_op_o,
+    output logic       csr_instr_o,
+    output logic       csr_imm_o
 );
 
     //------------------
@@ -49,24 +51,27 @@ module control_unit
 
     // Main decoder.
     main_decoder M_DEC (
-        .op_i            (op_i            ),
-        .instr_25_i      (instr_25_i      ),
-        .imm_src_o       (imm_src_o       ),
-        .result_src_o    (result_src_o    ),
-        .alu_op_o        (alu_op_s        ),
-        .mem_we_o        (mem_we_o        ),
-        .reg_we_o        (reg_we_o        ),
-        .alu_src_o       (alu_src_o       ),
-        .branch_o        (branch_o        ),
-        .jump_o          (jump_o          ),
-        .pc_target_src_o (pc_target_src_o ),
-        .forward_src_o   (forward_src_o   ),
-        .mem_access_o    (mem_access_o    ),
-        .ecall_instr_o   (ecall_instr_o   ),
-        .cause_o         (cause_o         ),
-        .load_instr_o    (load_instr_o    ),
-        .is_mdu_op_o     (is_mdu_op_o     ),
-        .is_mdu_word_op_o(is_mdu_word_op_o)
+        .op_i            (op_i           ),
+        .funct3_i        (func3_i        ),
+        .instr_25_i      (instr_25_i     ),
+        .imm_src_o       (imm_src_o      ),
+        .result_src_o    (result_src_o   ),
+        .alu_op_o        (alu_op_s       ),
+        .mem_we_o        (mem_we_o       ),
+        .reg_we_o        (reg_we_o       ),
+        .alu_src_o       (alu_src_o      ),
+        .branch_o        (branch_o       ),
+        .jump_o          (jump_o         ),
+        .pc_target_src_o (pc_target_src_o),
+        .forward_src_o   (forward_src_o  ),
+        .mem_access_o    (mem_access_o   ),
+        .ecall_instr_o   (ecall_instr_o  ),
+        .cause_o         (cause_o        ),
+        .load_instr_o    (load_instr_o   ),
+        .is_mdu_op_o     (is_mdu_op_o    ),
+        .is_mdu_word_op_o(is_mdu_word_op_o),
+        .csr_instr_o     (csr_instr_o    ),
+        .csr_imm_o       (csr_imm_o      )
     );
 
     // ALU decoder.

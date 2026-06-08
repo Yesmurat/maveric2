@@ -64,16 +64,14 @@ module alu_decoder
                     default: alu_control_o = 5'b00000;                               // Default to ADD.
                 endcase
 
-            // CSR.
-            // 3'b100:
-            //     case (func3_i[1:0])
-            //         2'b01: alu_control_o = 5'b10000;
-            //         2'b10: alu_control_o = 5'b10001;
-            //         2'b11: alu_control_o = 5'b10010;
-            //         default: begin
-            //             alu_control_o   = '0;
-            //         end
-            //     endcase
+            // CSR
+            3'b100:
+                case (func3_i[1:0])
+                    2'b01: alu_control_o = 5'b10000; // CSRRW(I): write = rs1/uimm
+                    2'b10: alu_control_o = 5'b10001; // CSRRS(I): write = old | rs1/uimm
+                    2'b11: alu_control_o = 5'b10010; // CSRRC(I): write = old & ~rs1/uimm
+                    default: alu_control_o = '0;
+                endcase
 
             default: begin
                 alu_control_o = '0;

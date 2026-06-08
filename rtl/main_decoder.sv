@@ -14,6 +14,7 @@ module main_decoder
 (
     // Input interface.
     input  logic [6:0] op_i,
+    input  logic [2:0] funct3_i,
     input  logic       instr_25_i,
 
     // Output interface.
@@ -32,7 +33,9 @@ module main_decoder
     output logic [3:0] cause_o,
     output logic       load_instr_o,
     output logic       is_mdu_op_o,
-    output logic       is_mdu_word_op_o
+    output logic       is_mdu_word_op_o,
+    output logic       csr_instr_o,
+    output logic       csr_imm_o
 );
 
     // Instruction type.
@@ -48,6 +51,7 @@ module main_decoder
         J_Type      = 4'b1000,
         U_Type_ALU  = 4'b1001,
         U_Type_LOAD = 4'b1010,
+        CSR_Type    = 4'b1011,
         ECALL       = 4'b1110,
         DEF         = 4'b1111
     } t_instruction;
@@ -71,7 +75,7 @@ module main_decoder
             7'b1101111: instr_type_s = J_Type;
             7'b0010111: instr_type_s = U_Type_ALU;
             7'b0110111: instr_type_s = U_Type_LOAD;
-            7'b1110011: instr_type_s = ECALL;
+            7'b1110011: instr_type_s = (funct3_i != 3'b0) ? CSR_Type : ECALL;
             default   : instr_type_s = DEF;
         endcase
     end
@@ -102,6 +106,8 @@ module main_decoder
         load_instr_o     = 1'b0;
         is_mdu_op_o      = 1'b0;
         is_mdu_word_op_o = 1'b0;
+        csr_instr_o      = 1'b0;
+        csr_imm_o        = 1'b0;
 
         case (instr_type_s)
             I_Type: begin
@@ -174,6 +180,15 @@ module main_decoder
                 result_src_o  = 3'b100;
                 forward_src_o = 2'b10;
             end
+            CSR_Type: begin
+                reg_we_o      = 1'b1;        // rd receives the old CSR value
+                alu_op_o      = 3'b100;      // signals CSR operation to alu_decoder
+                result_src_o  = 3'b101;      // WB mux selects CSR read data
+                forward_src_o = 2'b11;       // memory-stage forward mux selects csr_rdata
+                csr_instr_o   = 1'b1;
+                csr_imm_o     = funct3_i[2]; // 1 = immediate variant (CSRRWI/CSRRSI/CSRRCI)
+            end
+
             ECALL: begin
                 ecall_instr_o = 1'b1;
                 cause_o       = 4'b0011;
@@ -198,6 +213,8 @@ module main_decoder
                 mem_access_o    = 1'b0;
                 ecall_instr_o   = 1'b0;
                 load_instr_o    = 1'b0;
+                csr_instr_o     = 1'b0;
+                csr_imm_o       = 1'b0;
             end
         endcase
     end

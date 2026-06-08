@@ -48,7 +48,8 @@ module instr_decoder
             4'b1000: imm_src_o = 3'b011;  // J type. ex: JAL.
             4'b1001,                      // U type. ex: AUIPC.
             4'b1010: imm_src_o = 3'b100;  // U type. ex: LUI.
-            default: imm_src_o = 3'b101;  // Default to R type.
+            4'b1011: imm_src_o = 3'b101;  // CSR type: uimm zero-extended from instr[19:15].
+            default: imm_src_o = 3'b101;  // Default to R type (imm unused for R/ECALL/DEF).
         endcase
     end
 
