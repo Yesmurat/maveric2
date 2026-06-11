@@ -4,6 +4,41 @@ MAVERIC Core 2.0 is a 5-stage in-order, single-issue CPU which implements the 64
 
 ---
 
+## Quick Setup
+
+1. **Clone the repository.**
+```bash
+git clone https://github.com/Yesmurat/maveric2.git
+cd maveric2
+```
+
+2. **Install prerequisites.** On Debian/Ubuntu:
+```bash
+sudo apt-get install verilator gcc make python3 \
+     device-tree-compiler libboost-all-dev
+```
+You also need the RISC-V GNU toolchain and Spike. Follow the official
+[riscv-gnu-toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain)
+and [riscv-isa-sim](https://github.com/riscv-software-src/riscv-isa-sim)
+build guides, then add their `bin/` directories to your `PATH`.
+
+3. **Build Dromajo** (the co-simulation library used by the testbench).
+```bash
+cd tools/dromajo
+mkdir -p build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+cd ../../..
+```
+This produces `tools/dromajo/build/libdromajo_cosim.a`, which `run_tests.py`
+links into the Verilator simulation binary automatically.
+
+4. **Run a smoke test** to verify the environment is working.
+```bash
+python3 run_tests.py -s am-add --cosim-only
+```
+You should see `Self Check: PASS` in the output.
+
 ## Quick Start
 
 ```bash
@@ -36,12 +71,13 @@ Performance counters → `results/perf_result.txt`
 | Feature | Status |
 |---|---|
 | RV64I base integer | Implemented |
-| RV64M multiply (`mul`, `mulh`, `mulhsu`, `mulhu`, `mulw`) | Implemented |
+| RV64M | Implemented |
 | `W`-variant 32-bit ops (`addw`, `subw`, `sllw`, …) | Implemented |
 | `ECALL` / `EBREAK` and cause-code generation | Implemented |
-| M divide/remainder (`div`, `divu`, `rem`, `remu`, …) | Implemented |
+| Zicsr (CSR read/write instructions) | Implemented |
+| M-mode trap CSRs (`mtvec`, `mepc`, `mcause`, `mstatus`, `mscratch`) | Implemented |
 | C (compressed 16-bit instructions) | **Not implemented** |
-| Zicsr (CSR instructions) | **Not implemented** |
+| `mret` (return from trap) | **Not implemented** |
 | A (atomics), F/D (floating point) | **Not implemented** |
 | Interrupts / full privilege levels | **Not implemented** |
 
@@ -81,7 +117,9 @@ string in Spike is safe.
 **Fetch (IF)** — `rtl/fetch_stage.sv` drives the PC, consults the I-cache, and
 asks the branch predictor for a next-PC override on taken branches / BTB hits.
 The predicted target, direction, and BTB way flow down the pipeline so that
-Execute can validate them and drive training updates back.
+Execute can validate them and drive training updates back. The next-PC mux uses
+a three-way priority: trap redirect (`mtvec`) overrides branch-misprediction
+target, which overrides sequential fetch.
 
 **Decode (ID)** — `rtl/decode_stage.sv` splits the 32-bit instruction into
 fields via `instr_decoder`, derives ALU / memory / branch control signals from
@@ -89,9 +127,11 @@ fields via `instr_decoder`, derives ALU / memory / branch control signals from
 sign-/zero-extends the immediate through `extend_imm`.
 
 **Execute (EX)** — `rtl/execute_stage.sv` houses the 64-bit `alu`, a three-way
-forwarding mux (no-forward / EX-MEM / MEM-WB), and branch resolution. A
-misprediction detected here drives `branch_mispred_exec_o`, flushes IF + ID,
-and retargets the PC.
+forwarding mux (no-forward / EX-MEM / MEM-WB), branch resolution, and the CSR
+datapath. Zicsr instructions (CSRRW/CSRRS/CSRRC and their immediate variants)
+read and write the CSR register file here. An `ecall` instruction asserts
+`trap_o`, which causes the fetch stage to redirect to `mtvec`, the CSR file to
+latch `mepc` and `mcause` synchronously, and the hazard unit to flush IF + ID.
 
 **Memory (MEM)** — `rtl/memory_stage.sv` accesses the D-cache for loads and
 stores. Store widths are encoded as `SB=00`, `SH=01`, `SW=10`, `SD=11`;
@@ -114,6 +154,8 @@ the end-of-test self-check.
   Decode-stage source, IF/ID are stalled and a bubble is inserted into EX.
 - **Branch-misprediction flush**: flushes ID and EX; the front-end is
   redirected to the correct target computed in EX.
+- **Trap flush**: an `ecall` in EX asserts `trap_exec_i`, which flushes ID
+  (same mechanism as branch misprediction) and redirects the PC to `mtvec`.
 - **Cache stalls**: `stall_cache_i` from the cache FSM freezes every pipeline
   stage during an I-cache or D-cache miss.
 
@@ -204,23 +246,23 @@ D$ hit rate         : <xx.xx>%
 
 ## Repository Layout
 
-```
-rtl/                  SystemVerilog source — core, caches, AXI interface,
-│                     performance counters
-│   perf_counters.sv  Hardware performance counter module (DPI-C reporting)
-test/tb/              Verilator testbench and DPI-C helpers
-│   tb_test_env.cpp   Top-level testbench driver
-│   check.c           Self-check and branch-accuracy DPI function
-│   log_trace.c       Per-instruction trace DPI function
-│   report_perf.c     Performance counter report DPI function
-│   dromajo_cosim.cpp Dromajo per-instruction co-simulation
-test/tests/           Prebuilt ELF binaries and test lists
-scripts/              ELF→disasm, disasm→mem, Spike trace comparison helpers
-tools/snippy/         Snippy config and test-generation script
-results/              Auto-populated: result.txt, perf_result.txt
-tests_perf_results.txt  Summary of all 188 tests with per-test metrics
-run_tests.py          Top-level driver: verilate, build, simulate, grade
-```
+The top-level directories and files of this repo:
+
+- **rtl**: SystemVerilog source for the processor core, caches, AXI4-Lite interface, and performance counters. All synthesisable RTL lives here; nothing outside this directory should be needed to build the design.
+
+- **test/tb**: Verilator testbench and DPI-C helper implementations. Contains the top-level driver (`tb_test_env.cpp`), the self-check function (`check.c`), the per-instruction trace logger (`log_trace.c`), the performance counter reporter (`report_perf.c`), and the Dromajo co-simulation harness (`dromajo_cosim.cpp`).
+
+- **test/tests**: Prebuilt test artefacts organised by test group (`am-kernels`, `riscv-tests`, `riscv-arch-test`, `snippy`, `custom`). Each group has three subdirectories: `bin/` for ELF binaries, `dis-asm/` for objdump listings, and `instr/` for the hex instruction-memory images loaded by the simulator. Test name lists live in `test/tests/list/`.
+
+- **scripts**: Helper scripts for the test pipeline. `elf2disasm.py` converts ELF binaries to objdump listings; `disasm2mem.py` converts those listings to simulator hex images; `tracecomp.py` normalises and diffs RTL and Spike commit logs.
+
+- **tools**: Third-party tools used by the verification flow. `tools/dromajo/` holds the Dromajo instruction-accurate simulator built as a static co-simulation library; `tools/snippy/` holds the Snippy random-test generator configuration and generation script.
+
+- **docs**: Design documentation and reference material.
+
+- **results**: Auto-populated by `run_tests.py`. `result.txt` records per-test pass/fail verdicts; `perf_result.txt` records pipeline CPI, cache hit rates, and branch-predictor accuracy for each run.
+
+- **run_tests.py**: Top-level test driver. Verilates the design, builds the simulation binary, runs tests (individually, by group, or all), grades self-check and trace-compare results, and optionally sweeps cache geometry or generates coverage data.
 
 ---
 
