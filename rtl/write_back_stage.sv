@@ -68,27 +68,29 @@ module write_back_stage
     //----------------------------------------
     /* verilator lint_off WIDTH */
     import "DPI-C" function void check(
-        byte a0,
-        byte mcause,
+        byte              a0,
+        byte              mcause,
         shortint unsigned branch_total,
         shortint unsigned branch_mispred
     );
+
     import "DPI-C" function void log_trace(
         longint unsigned pc,            // uint64_t
-        int unsigned instruction,       // uint32_t
+        int     unsigned instruction,   // uint32_t
         longint unsigned reg_val,       // uint64_t
-        byte unsigned reg_addr,         // uint8_t
-        byte unsigned reg_we,
-        byte unsigned mem_access,
+        byte    unsigned reg_addr,      // uint8_t
+        byte    unsigned reg_we,
+        byte    unsigned mem_access,
         longint unsigned mem_val,
         longint unsigned mem_addr,
-        byte unsigned mem_we
+        byte    unsigned mem_we
     );
+
     import "DPI-C" function void dromajo_step(
         longint unsigned pc,            // uint64_t
-        int unsigned insn,              // uint32_t
+        int     unsigned insn,          // uint32_t
         longint unsigned wdata,         // uint64_t
-        byte unsigned reg_we            // uint8_t
+        byte    unsigned reg_we         // uint8_t
     );
 
     always_comb begin
