@@ -256,7 +256,7 @@ module datapath
     logic                     reg_we_wb_in_s;
     logic                     ecall_instr_wb_in_s;
     logic [              3:0] cause_wb_in_s;
-    logic                     a0_reg_lsb_s;
+    logic [              7:0] a0_reg_s;
     logic                     log_trace_wb_in_s;
     logic [ADDR_WIDTH  - 1:0] pc_log_wb_in_s;
     logic [INSTR_WIDTH - 1:0] instruction_log_wb_in_s;
@@ -371,7 +371,7 @@ module datapath
         .instruction_log_o     (instruction_log_dec_out_s    ),
         .ecall_instr_o         (ecall_instr_dec_out_s        ),
         .cause_o               (cause_dec_out_s              ),
-        .a0_reg_lsb_o          (a0_reg_lsb_s                 ),
+        .a0_reg_o              (a0_reg_s                     ),
         .load_instr_o          (load_instr_dec_out_s         ),
         .is_mdu_op_o           (is_mdu_op_dec_out_s          ),
         .is_mdu_word_op_o      (is_mdu_word_op_dec_out_s     ),
@@ -710,7 +710,7 @@ module datapath
         .cause_i              (cause_wb_in_s             ),
         .branch_total_i       (branch_count_s            ),
         .branch_mispred_i     (branch_mispred_count_s    ),
-        .a0_reg_lsb_i         (a0_reg_lsb_s              ),
+        .a0_reg_i             (a0_reg_s                  ),
         .log_trace_i          (log_trace_wb_in_s         ),
         .pc_log_i             (pc_log_wb_in_s            ),
         .instruction_log_i    (instruction_log_wb_in_s   ),

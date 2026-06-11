@@ -31,7 +31,7 @@ module register_file
     input  logic [DATA_WIDTH - 1:0] write_data_3_i,
 
     // Output interface.
-    output logic                    a0_reg_lsb_o,
+    output logic [             7:0] a0_reg_o,
     output logic [DATA_WIDTH - 1:0] read_data_1_o,
     output logic [DATA_WIDTH - 1:0] read_data_2_o
 );
@@ -55,7 +55,7 @@ module register_file
     assign read_data_1_o = ((addr_1_i == addr_3_i) & write_en_3_i) ? write_data_3_i : mem_block[addr_1_i];
     assign read_data_2_o = ((addr_2_i == addr_3_i) & write_en_3_i) ? write_data_3_i : mem_block[addr_2_i];
 
-    assign a0_reg_lsb_o = mem_block[10][0];
+    assign a0_reg_o = mem_block[10][7:0];
 
 
 endmodule

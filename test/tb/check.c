@@ -10,8 +10,8 @@ int check(int8_t a0, int8_t mcause, uint16_t branch_total, uint16_t branch_mispr
             printf ("PASS | BRANCH PREDICTION ACCURACY: %.2f%%\n", accuracy);
         else if (a0 == 1)
             printf ("FAIL | BRANCH PREDICTION ACCURACY: %.2f%%\n", accuracy);
-        else printf
-            ("UNDEFINED value stored in a0 register\n");
+        else
+            return 0;
     }
     else if (mcause == 2)
         printf("ILLEGAL INSTRUCTION | BRANCH PREDICTION ACCURACY: %.2f%%\n", accuracy);
@@ -21,6 +21,6 @@ int check(int8_t a0, int8_t mcause, uint16_t branch_total, uint16_t branch_mispr
     else if (mcause == 6) printf("STORE ADDR MISALIGNED | BRANCH PREDICTION ACCURACY: %.2f%%\n", accuracy);
     else printf ("UNDEFINED ERROR\n");
 
-    return 0;
+    return 1;
 }
 

@@ -59,7 +59,7 @@ module decode_stage
     output logic                     log_trace_o,
     output logic [INSTR_WIDTH - 1:0] instruction_log_o,
     output logic [              3:0] cause_o,
-    output logic                     a0_reg_lsb_o,
+    output logic [              7:0] a0_reg_o,
     output logic                     load_instr_o,
     output logic                     is_mdu_op_o,
     output logic                     is_mdu_word_op_o,
@@ -155,7 +155,7 @@ module decode_stage
         .addr_2_i       (rs2_addr_s     ),
         .addr_3_i       (rd_addr_i      ),
         .write_data_3_i (rd_write_data_i),
-        .a0_reg_lsb_o   (a0_reg_lsb_o   ),
+        .a0_reg_o       (a0_reg_o       ),
         .read_data_1_o  (rs1_data_o     ),
         .read_data_2_o  (rs2_data_o     )
     );

@@ -32,7 +32,7 @@ module write_back_stage
     input  logic [              3:0] cause_i,
     input  logic [             15:0] branch_total_i,
     input  logic [             15:0] branch_mispred_i,
-    input  logic                     a0_reg_lsb_i,
+    input  logic [              7:0] a0_reg_i,
     input  logic                     log_trace_i,
     input  logic [ADDR_WIDTH  - 1:0] pc_log_i,
     input  logic [INSTR_WIDTH - 1:0] instruction_log_i,
@@ -67,7 +67,7 @@ module write_back_stage
     // Logic for Ecall instruction detection.
     //----------------------------------------
     /* verilator lint_off WIDTH */
-    import "DPI-C" function void check(
+    import "DPI-C" function int check(
         byte              a0,
         byte              mcause,
         shortint unsigned branch_total,
@@ -93,10 +93,11 @@ module write_back_stage
         byte    unsigned reg_we         // uint8_t
     );
 
+    // Exit logic.
     always_comb begin
         if (ecall_instr_i) begin
-            check(a0_reg_lsb_i, cause_i, branch_total_i, branch_mispred_i);
-            $finish; // For simulation only.
+            if (check(a0_reg_i, cause_i, branch_total_i, branch_mispred_i))
+                $finish; // For simulation only.
         end
     end
 
