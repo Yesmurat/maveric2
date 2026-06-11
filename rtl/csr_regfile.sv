@@ -1,4 +1,4 @@
-/* Copyright (c) 2024-2026 Maveric NU. All rights reserved. */
+/* Copyright (c) 2024-2026 Texer.AI. All rights reserved. */
 
 //-------------------------------
 // Engineer     : Yesmurat
@@ -7,23 +7,25 @@
 //------------------------------
 
 // -----------------------------------------------------------------------
-// This is a Zicsr CSR register file component of processor based on RISC-V architecture.
+// This is a register file that holds Control and Status Registers.
 // -----------------------------------------------------------------------
 
-/*
-Implemented CSRs
-Machine Information (read-only)
-  0xF11  mvendorid   Non-commercial → 0
-  0xF12  marchid     Unregistered   → 0
-  0xF13  mimpid      Implementation revision → 1
-  0xF14  mhartid     Single hart    → 0
-  0x301  misa        RV64IM         → see MISA_VAL
+/* Implemented CSRs
 
-Machine Status (partially writable)
-  0x300  mstatus     MPP hardwired 11 (M-mode only); all other
-                     fields WARL → 0 until trap support is added
-Scratch (fully writable)
-  0x340  mscratch    General-purpose M-mode scratch register
+Machine Information Registers (read-only)
+    0xF11  mvendorid   Non-commercial -> 0
+    0xF12  marchid     Unregistered   -> 0
+    0xF13  mimpid      Implementation -> 1
+    0xF14  mhartid     Single hart    -> 0
+
+Machine Trap Setup (read/write)
+    0x300  mstatus     MPP hardwired 11 (M-mode only)
+    0x301  misa        RV64IM         -> see MISA_VAL
+
+Machine Trap Handling (read/write)
+    0x340  mscratch    Machine scratch register
+    0x341  mepc        Machine exception program counter
+    0x342  mcause      Machine trap cause
 */
 
 module csr_regfile
@@ -47,6 +49,13 @@ module csr_regfile
     input  logic [DATA_WIDTH - 1:0] wdata_i,
     input  logic                    we_i,
 
+    // Trap handling.
+    input  logic                     trap_i,
+    input  logic [DATA_WIDTH - 1:0]  trap_pc_i,     // saved to mepc
+    input  logic [DATA_WIDTH - 1:0]  trap_cause_i, // saved to mcause
+
+    output logic [DATA_WIDTH - 1:0]  mtvec_o     // fetch stage reads this for redirect
+
 );
 
     // misa: MXL=2 (RV64) at bits [63:62], extensions I (bit 8) + M (bit 12).
@@ -60,6 +69,9 @@ module csr_regfile
     // Writable registers.
     logic [DATA_WIDTH - 1:0] mstatus_r;
     logic [DATA_WIDTH - 1:0] mscratch_r;
+    logic [DATA_WIDTH - 1:0] mtvec_r;
+    logic [DATA_WIDTH - 1:0] mepc_r;
+    logic [DATA_WIDTH - 1:0] mcause_r;
 
     // Write logic (synchronous).
     always_ff @(posedge clk_i, posedge arst_i) begin
@@ -68,16 +80,31 @@ module csr_regfile
 
             mstatus_r  <= MSTATUS_RESET;
             mscratch_r <= '0;
+            mtvec_r    <= '0;
+            mepc_r     <= '0;
+            mcause_r   <= '0;
 
+        end
+
+        else if (trap_i) begin
+
+            mepc_r   <= trap_pc_i;
+            mcause_r <= trap_cause_i;
+            
         end
         
         else if (we_i) begin
 
             case (waddr_i)
 
+                12'h305: mtvec_r    <= wdata_i;
+
                 // mstatus: accept writes but keep MPP fixed at 11 (WARL).
                 12'h300: mstatus_r  <= (wdata_i & ~(64'd3 << 11)) | MSTATUS_RESET;
+
                 12'h340: mscratch_r <= wdata_i;
+                12'h341: mepc_r     <= wdata_i;
+                12'h342: mcause_r   <= wdata_i;
                 default: ; // all other writes silently ignored
 
             endcase
@@ -90,24 +117,29 @@ module csr_regfile
     always_comb begin
 
         case (raddr_i)
-        
-            // Machine status.
-            12'h300: rdata_o = mstatus_r;
-
-            // Machine ISA and identification.
-            12'h301: rdata_o = MISA_VAL;
+    
+            // Machine Information Registers
             12'hF11: rdata_o = '0;                    // mvendorid
             12'hF12: rdata_o = '0;                    // marchid
             12'hF13: rdata_o = 64'd1;                 // mimpid
             12'hF14: rdata_o = '0;                    // mhartid
 
-            // Scratch.
-            12'h340: rdata_o = mscratch_r;
+            // Machine Trap Setup
+            12'h300: rdata_o = mstatus_r;             // mstatus
+            12'h301: rdata_o = MISA_VAL;              // misa
+            12'h305: rdata_o = mtvec_r;               // mtvec
+
+            // Machine Trap Handling
+            12'h340: rdata_o = mscratch_r;            // mscratch
+            12'h341: rdata_o = mepc_r;                // mepc
+            12'h342: rdata_o = mcause_r;              // mcause
 
             default: rdata_o = '0;
 
         endcase
 
     end
+
+    assign mtvec_o = mtvec_r;
 
 endmodule
