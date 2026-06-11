@@ -30,6 +30,7 @@ module hazard_unit
     input  logic                    load_instr_exec_i,
     input  logic                    stall_cache_i,
     input  logic                    mdu_busy_exec_i,
+    input  logic                    trap_exec_i,
 
     // Output interface.
     output logic                    stall_fetch_o,
@@ -65,7 +66,7 @@ module hazard_unit
     assign stall_exec_o  = stall_cache_i | mdu_stall_s;
     assign stall_mem_o   = stall_cache_i | mdu_stall_s;
 
-    assign flush_dec_s  = branch_mispred_exec_i & (~ stall_cache_i);
+    assign flush_dec_s  = (branch_mispred_exec_i | trap_exec_i) & (~ stall_cache_i);
     assign flush_dec_o  = flush_dec_s;
     assign flush_exec_o = (load_instr_stall_s & (~ stall_cache_i)) | flush_dec_s;
 

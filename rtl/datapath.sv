@@ -59,7 +59,8 @@ module datapath
     output logic                     mem_access_o,
     output logic                     load_instr_exec_o,
     output logic                     mdu_busy_exec_o,
-    output logic                     log_trace_wb_o
+    output logic                     log_trace_wb_o,
+    output logic                     trap_exec_o
 );
 
     //-------------------------------------------------------------
@@ -194,6 +195,10 @@ module datapath
     logic                     csr_imm_exec_in_s;
     logic [             11:0] csr_addr_exec_in_s;
 
+    // Trap signals: execute → fetch (redirect) and top-level (hazard unit).
+    logic                     trap_exec_out_s;
+    logic [DATA_WIDTH  - 1:0] trap_redirect_exec_out_s;
+
     // CSR read data: execute → pipe_mem → memory → pipe_wb → write_back.
     logic [DATA_WIDTH  - 1:0] csr_rdata_exec_out_s;
     logic [DATA_WIDTH  - 1:0] csr_rdata_mem_in_s;
@@ -295,7 +300,9 @@ module datapath
         .btb_way_o             (btb_way_fetch_out_s            ),
         .branch_taken_pred_o   (branch_taken_pred_fetch_out_s  ),
         .log_trace_o           (log_trace_fetch_out_s          ),
-        .icache_hit_o          (icache_hit_o                   )
+        .icache_hit_o          (icache_hit_o                   ),
+        .trap_i                (trap_exec_out_s                ),
+        .trap_redirect_i       (trap_redirect_exec_out_s       )
     );
 
     //------------------------------------------------------------------------------
@@ -514,7 +521,9 @@ module datapath
         .log_trace_o           (log_trace_exec_out_s         ),
         .load_instr_o          (load_instr_exec_o            ),
         .mdu_busy_o            (mdu_busy_exec_out_s          ),
-        .csr_rdata_o           (csr_rdata_exec_out_s         )
+        .csr_rdata_o           (csr_rdata_exec_out_s         ),
+        .trap_o                (trap_exec_out_s              ),
+        .trap_redirect_o       (trap_redirect_exec_out_s     )
     );
 
     assign pc_target_addr_fetch_in_s = pc_new_exec_out_s;
@@ -727,6 +736,7 @@ module datapath
     assign rd_addr_wb_o          = rd_addr_wb_out_s;
     assign branch_mispred_exec_o = branch_mispred_fetch_in_s;
     assign mdu_busy_exec_o       = mdu_busy_exec_out_s;
+    assign trap_exec_o           = trap_exec_out_s;
 
     // Pipeline between Dec & Exec.
     assign rs1_addr_dec_o = rs1_addr_dec_out_s;

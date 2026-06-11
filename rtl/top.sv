@@ -55,6 +55,7 @@ module top
     logic                    branch_mispred_exec_s;
     logic                    load_instr_exec_s;
     logic                    mdu_busy_exec_s;
+    logic                    trap_exec_s;
 
     logic [ADDR_WIDTH - 1:0] axi_read_addr_icache_s;
     logic [ADDR_WIDTH - 1:0] axi_read_addr_dcache_s;
@@ -132,7 +133,8 @@ module top
         .mem_access_o          (mem_access_s          ),
         .load_instr_exec_o     (load_instr_exec_s     ),
         .mdu_busy_exec_o       (mdu_busy_exec_s       ),
-        .log_trace_wb_o        (log_trace_wb_s        )
+        .log_trace_wb_o        (log_trace_wb_s        ),
+        .trap_exec_o           (trap_exec_s           )
     );
 
     //-------------------------------------
@@ -152,6 +154,7 @@ module top
         .load_instr_exec_i     (load_instr_exec_s    ),
         .stall_cache_i         (stall_cache_s        ),
         .mdu_busy_exec_i       (mdu_busy_exec_s      ),
+        .trap_exec_i           (trap_exec_s          ),
         .stall_fetch_o         (stall_fetch_s        ),
         .stall_dec_o           (stall_dec_s          ),
         .stall_exec_o          (stall_exec_s         ),

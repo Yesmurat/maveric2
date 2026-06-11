@@ -30,6 +30,8 @@ module fetch_stage
     input  logic                     branch_taken_exec_i,
     input  logic [              1:0] btb_way_exec_i,
     input  logic [ADDR_WIDTH  - 1:0] pc_exec_i,
+    input  logic                     trap_i,
+    input  logic [ADDR_WIDTH  - 1:0] trap_redirect_i,
 
     // Output interface.
     output logic [INSTR_WIDTH - 1:0] instruction_o,
@@ -71,12 +73,9 @@ module fetch_stage
 
 
     // 2-to-1 MUX module to choose between PC from fetch and TA from exec.
-    mux2to1 MUX1 (
-        .control_signal_i (branch_mispred_i),
-        .mux_0_i          (pc_fetch_s      ),
-        .mux_1_i          (pc_target_addr_i),
-        .mux_o            (pc_next_s       )
-    );
+    assign pc_next_s = trap_i       ? trap_redirect_i  :
+                    branch_mispred_i ? pc_target_addr_i :
+                    pc_fetch_s;
 
     // PC register.
     register_en # (
