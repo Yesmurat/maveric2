@@ -83,7 +83,9 @@ module execute_stage
     output logic                    log_trace_o,
     output logic                    load_instr_o,
     output logic                    mdu_busy_o,
-    output logic [DATA_WIDTH - 1:0] csr_rdata_o
+    output logic [DATA_WIDTH - 1:0] csr_rdata_o,
+    output logic                    trap_o,
+    output logic [DATA_WIDTH - 1:0] trap_redirect_o
 );
 
     //-------------------------------------
@@ -100,6 +102,8 @@ module execute_stage
     logic [DATA_WIDTH - 1:0] csr_rdata_s;
     logic [DATA_WIDTH - 1:0] csr_wdata_s;
     logic [DATA_WIDTH - 1:0] csr_src_s;
+    logic [DATA_WIDTH - 1:0] trap_pc_s;
+    logic [DATA_WIDTH - 1:0] trap_cause_s;
     logic [ADDR_WIDTH - 1:0] rs1_plus_imm_s;
     logic [ADDR_WIDTH - 1:0] pc_target_addr_s;
 
@@ -202,22 +206,26 @@ module execute_stage
     // Compute new CSR write value.
     always_comb begin
         case (alu_control_i[1:0])
-            2'b01: csr_wdata_s = csr_src_s;                 // CSRRW(I): replace
-            2'b10: csr_wdata_s = csr_rdata_s | csr_src_s;   // CSRRS(I): set bits
-            2'b11: csr_wdata_s = csr_rdata_s & ~csr_src_s;  // CSRRC(I): clear bits
+            2'b00: csr_wdata_s = csr_src_s;                 // CSRRW(I): rd ← old CSR; CSR ← rs1/uimm
+            2'b01: csr_wdata_s = csr_rdata_s | csr_src_s;   // CSRRS(I): rd ← old CSR; CSR ← old | rs1/uimm
+            2'b10: csr_wdata_s = csr_rdata_s & ~csr_src_s;  // CSRRC(I): rd ← old CSR; CSR ← old & ~rs1/uimm
             default: csr_wdata_s = '0;
         endcase
     end
 
     // Control Status Register File.
     csr_regfile CSR_REG0 (
-        .clk_i         (clk_i      ),
-        .arst_i        (arst_i     ),
-        .raddr_i       (csr_addr_i ),
-        .rdata_o       (csr_rdata_s),
-        .waddr_i       (csr_addr_i ),
-        .wdata_i       (csr_wdata_s),
-        .we_i          (csr_instr_i)
+        .clk_i         (clk_i          ),
+        .arst_i        (arst_i         ),
+        .raddr_i       (csr_addr_i     ),
+        .rdata_o       (csr_rdata_s    ),
+        .waddr_i       (csr_addr_i     ),
+        .wdata_i       (csr_wdata_s    ),
+        .we_i          (csr_instr_i    ),
+        .trap_i        (trap_o         ),
+        .trap_pc_i     (trap_pc_s      ),
+        .trap_cause_i  (trap_cause_s   ),
+        .mtvec_o       (trap_redirect_o)
     );
 
     assign csr_rdata_o = csr_rdata_s;
@@ -273,6 +281,10 @@ module execute_stage
     assign mem_access_o     = mem_access_i;
     assign ecall_instr_o    = ecall_instr_i;
     assign cause_o          = cause_i;
+
+    assign trap_o       = ecall_instr_i;
+    assign trap_pc_s    = pc_i;
+    assign trap_cause_s = {60'b0, cause_i};
 
     // Log trace.
     assign log_trace_o = log_trace_i;
