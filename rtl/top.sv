@@ -60,7 +60,9 @@ module top
     logic [ADDR_WIDTH - 1:0] axi_read_addr_icache_s;
     logic [ADDR_WIDTH - 1:0] axi_read_addr_dcache_s;
     logic [ADDR_WIDTH - 1:0] axi_wb_addr_dcache_s;
+    /* verilator lint_off UNUSEDSIGNAL */
     logic [ADDR_WIDTH - 1:0] axi_addr_s;
+    /* verilator lint_on UNUSEDSIGNAL */
 
     logic axi_read_start_icache_s;
     logic axi_read_start_dcache_s;
