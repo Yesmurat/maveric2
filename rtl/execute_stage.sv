@@ -205,10 +205,10 @@ module execute_stage
 
     // Compute new CSR write value.
     always_comb begin
-        case (alu_control_i[1:0])
-            2'b00: csr_wdata_s = csr_src_s;                 // CSRRW(I): rd ← old CSR; CSR ← rs1/uimm
-            2'b01: csr_wdata_s = csr_rdata_s | csr_src_s;   // CSRRS(I): rd ← old CSR; CSR ← old | rs1/uimm
-            2'b10: csr_wdata_s = csr_rdata_s & ~csr_src_s;  // CSRRC(I): rd ← old CSR; CSR ← old & ~rs1/uimm
+        case (func3_i)
+            3'b001, 3'b101: csr_wdata_s = csr_src_s;                 // csrrw(i): rd ← old CSR; CSR ← rs1/uimm
+            3'b010, 3'b110: csr_wdata_s = csr_rdata_s | csr_src_s;   // csrrs(i): rd ← old CSR; CSR ← old | rs1/uimm
+            3'b011, 3'b111: csr_wdata_s = csr_rdata_s & ~csr_src_s;  // csrrc(i): rd ← old CSR; CSR ← old & ~rs1/uimm
             default: csr_wdata_s = '0;
         endcase
     end

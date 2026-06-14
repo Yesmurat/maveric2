@@ -88,8 +88,14 @@ module csr_regfile
 
         else if (trap_i) begin
 
-            mepc_r   <= trap_pc_i;
-            mcause_r <= trap_cause_i;
+            mepc_r           <= trap_pc_i;
+            mcause_r         <= trap_cause_i;
+            mstatus_r[7]     <= mstatus_r[3];
+            mstatus_r[3]     <= 1'b0;
+            mstatus_r[12:11] <= 2'b11;
+            // MIE is mstatus[3];
+            // MPIE is mstatus[7];
+            // MPP is mstatus[12:11];
             
         end
         
@@ -140,6 +146,6 @@ module csr_regfile
 
     end
 
-    assign mtvec_o = mtvec_r;
+    assign mtvec_o = {mtvec_r[DATA_WIDTH-1:2], 2'b00};
 
 endmodule

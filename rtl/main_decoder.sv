@@ -40,20 +40,19 @@ module main_decoder
 
     // Instruction type.
     typedef enum logic [3:0] {
-        I_Type      = 4'b0000,
-        I_Type_ALU  = 4'b0001,
-        I_Type_JALR = 4'b0010,
-        I_Type_ALUW = 4'b0011,
-        S_Type      = 4'b0100,
-        R_Type      = 4'b0101,
-        R_Type_W    = 4'b0110,
-        B_Type      = 4'b0111,
-        J_Type      = 4'b1000,
-        U_Type_ALU  = 4'b1001,
-        U_Type_LOAD = 4'b1010,
-        CSR_Type    = 4'b1011,
-        ECALL       = 4'b1110,
-        DEF         = 4'b1111
+        I_Type      = 4'd0,
+        I_Type_ALU  = 4'd1,
+        I_Type_JALR = 4'd2,
+        I_Type_ALUW = 4'd3,
+        S_Type      = 4'd4,
+        R_Type      = 4'd5,
+        R_Type_W    = 4'd6,
+        B_Type      = 4'd7,
+        J_Type      = 4'd8,
+        U_Type_ALU  = 4'd9,
+        U_Type_LOAD = 4'd10,
+        SYSTEM      = 4'd11,
+        DEF         = 4'd12
     } t_instruction;
 
     // Instruction decoder signal.
@@ -75,7 +74,7 @@ module main_decoder
             7'b1101111: instr_type_s = J_Type;
             7'b0010111: instr_type_s = U_Type_ALU;
             7'b0110111: instr_type_s = U_Type_LOAD;
-            7'b1110011: instr_type_s = (funct3_i != 3'b0) ? CSR_Type : ECALL;
+            7'b1110011: instr_type_s = SYSTEM;
             default   : instr_type_s = DEF;
         endcase
     end
@@ -180,18 +179,28 @@ module main_decoder
                 result_src_o  = 3'b100;
                 forward_src_o = 2'b10;
             end
-            CSR_Type: begin
-                reg_we_o      = 1'b1;        // rd receives the old CSR value
-                alu_op_o      = 3'b100;      // signals CSR operation to alu_decoder
-                result_src_o  = 3'b101;      // WB mux selects CSR read data
-                forward_src_o = 2'b11;       // memory-stage forward mux selects csr_rdata
-                csr_instr_o   = 1'b1;
-                csr_imm_o     = funct3_i[2]; // 1 = immediate variant (CSRRWI/CSRRSI/CSRRCI)
-            end
 
-            ECALL: begin
-                ecall_instr_o = 1'b1;
-                cause_o       = 4'b0011;
+            SYSTEM: begin
+
+                if (funct3_i == 3'b000) begin
+
+                    // ecall for now.
+                    // Later, distinguish between ecall, ebreak, sret, mret.
+                    ecall_instr_o = 1'b1;
+                    cause_o       = 4'b1011; // M-mode ecall → mcause 11
+                    
+                end
+
+                else begin // CSR instructions
+
+                    reg_we_o      = 1'b1;        // rd receives the old CSR value.
+                    result_src_o  = 3'b101;      // WB mux selects CSR read data.
+                    forward_src_o = 2'b11;       // memory-stage forward mux selects csr_rdata.
+                    csr_instr_o   = 1'b1;        // csr register file write enable signal.
+                    csr_imm_o     = funct3_i[2]; // 1 = immediate variant (CSRRWI/CSRRSI/CSRRCI).
+
+                end
+
             end
 
             DEF: begin
