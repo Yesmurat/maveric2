@@ -224,3 +224,5 @@ snippy-subw: ./test/tests/instr/snippy/snippy-subw.txt
 snippy-sw: ./test/tests/instr/snippy/snippy-sw.txt
 snippy-xor: ./test/tests/instr/snippy/snippy-xor.txt
 snippy-xori: ./test/tests/instr/snippy/snippy-xori.txt
+csr-test:./test/tests/instr/custom/csr_test.txt
+mret-test:./test/tests/instr/custom/mret-test.txt
