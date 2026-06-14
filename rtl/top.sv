@@ -79,18 +79,9 @@ module top
     logic dcache_dirty_s;
     logic mem_access_s;
 
+    /* verilator lint_off UNUSEDSIGNAL */
     logic        log_trace_wb_s;
-
-    /* verilator lint_off UNUSED */
-    logic [63:0] perf_cycle_count_s;
-    logic [63:0] perf_instr_count_s;
-    logic [63:0] perf_stall_cycles_s;
-    logic [63:0] perf_icache_hits_s;
-    logic [63:0] perf_icache_misses_s;
-    logic [63:0] perf_dcache_hits_s;
-    logic [63:0] perf_dcache_misses_s;
-    logic [63:0] perf_branch_mispred_s;
-    /* verilator lint_on UNUSED */
+    /* verilator lint_on UNUSEDSIGNAL */
 
     //-------------------------------------------------------------
     // Lower level modules.
@@ -188,30 +179,6 @@ module top
         .axi_read_start_dcache_o (axi_read_start_dcache_s)
     );
 
-
-    //-------------------------------------
-    // Performance counters.
-    //-------------------------------------
-    perf_counters PERF0 (
-        .clk_i                  (clk_i                  ),
-        .arst_i                 (arst_i                 ),
-        .instr_retired_i        (log_trace_wb_s         ),
-        .stall_i                (stall_fetch_s          ),
-        .icache_hit_i           (icache_hit_s           ),
-        .icache_req_i           (axi_read_start_icache_s),
-        .dcache_hit_i           (dcache_hit_s           ),
-        .dcache_req_i           (axi_read_start_dcache_s),
-        .mem_access_i           (mem_access_s           ),
-        .branch_mispred_i       (branch_mispred_exec_s  ),
-        .cycle_count_o          (perf_cycle_count_s     ),
-        .instr_count_o          (perf_instr_count_s     ),
-        .stall_cycles_o         (perf_stall_cycles_s    ),
-        .icache_hits_o          (perf_icache_hits_s     ),
-        .icache_misses_o        (perf_icache_misses_s   ),
-        .dcache_hits_o          (perf_dcache_hits_s     ),
-        .dcache_misses_o        (perf_dcache_misses_s   ),
-        .branch_mispred_count_o (perf_branch_mispred_s  )
-    );
 
 
     //---------------------------------------------

@@ -703,17 +703,6 @@ class TestRunner:
             ],
             description="Compile log-trace helper",
         )
-        self.command_runner.run(
-            [
-                "gcc",
-                "-c",
-                "-o",
-                format_repo_path(ROOT / "report_perf.o"),
-                format_repo_path(ROOT / "test/tb/report_perf.c"),
-            ],
-            description="Compile report-perf helper",
-        )
-
         verilator_command = [
             "verilator",
             "--assert",
@@ -739,7 +728,6 @@ class TestRunner:
                 format_repo_path(ROOT / "test/tb/tb_test_env.cpp"),
                 format_repo_path(ROOT / "test/tb/check.c"),
                 format_repo_path(ROOT / "test/tb/log_trace.c"),
-                format_repo_path(ROOT / "test/tb/report_perf.c"),
                 format_repo_path(ROOT / "test/tb/dromajo_cosim.cpp"),
                 str(DROMAJO_LIB),
             ]
@@ -1182,7 +1170,6 @@ class TestRunner:
             OBJ_DIR,
             ROOT / "check.o",
             ROOT / "log_trace.o",
-            ROOT / "report_perf.o",
             RES_FILE,
             TEMP_DIFF_FILE,
             SPIKE_TEMP_LOG,
