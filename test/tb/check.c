@@ -1,6 +1,9 @@
  #include <stdio.h>
  #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int check(int8_t a0, int8_t mcause, uint16_t branch_total, uint16_t branch_mispred) {
     double accuracy = 100 - 100 * (double) branch_mispred / branch_total;
@@ -10,8 +13,10 @@ int check(int8_t a0, int8_t mcause, uint16_t branch_total, uint16_t branch_mispr
             printf ("PASS | BRANCH PREDICTION ACCURACY: %.2f%%\n", accuracy);
         else if (a0 == 1)
             printf ("FAIL | BRANCH PREDICTION ACCURACY: %.2f%%\n", accuracy);
+        else if (a0 == 2)
+            return 0;   // trap-test sentinel: continue so the trap handler can run
         else
-            return 0;
+            return 1;
     }
     else if (mcause == 2)
         printf("ILLEGAL INSTRUCTION | BRANCH PREDICTION ACCURACY: %.2f%%\n", accuracy);
@@ -23,4 +28,8 @@ int check(int8_t a0, int8_t mcause, uint16_t branch_total, uint16_t branch_mispr
 
     return 1;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
