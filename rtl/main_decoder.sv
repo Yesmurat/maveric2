@@ -16,6 +16,7 @@ module main_decoder
     input  logic [6:0] op_i,
     input  logic [2:0] funct3_i,
     input  logic       instr_25_i,
+    input  logic [11:0] funct12_i,
 
     // Output interface.
     output logic [2:0] imm_src_o,
@@ -30,6 +31,7 @@ module main_decoder
     output logic [1:0] forward_src_o,
     output logic       mem_access_o,
     output logic       ecall_instr_o,
+    output logic       mret_instr_o,
     output logic [3:0] cause_o,
     output logic       load_instr_o,
     output logic       is_mdu_op_o,
@@ -101,6 +103,7 @@ module main_decoder
         forward_src_o    = 2'b0; // 00 - ALUResult, 01 - PCTarget, 10 - ImmExt.
         mem_access_o     = 1'b0;
         ecall_instr_o    = 1'b0;
+        mret_instr_o     = 1'b0;
         cause_o          = 4'b0;
         load_instr_o     = 1'b0;
         is_mdu_op_o      = 1'b0;
@@ -184,10 +187,20 @@ module main_decoder
 
                 if (funct3_i == 3'b000) begin
 
-                    // ecall for now.
-                    // Later, distinguish between ecall, ebreak, sret, mret.
-                    ecall_instr_o = 1'b1;
-                    cause_o       = 4'b1011; // M-mode ecall → mcause 11
+                    case (funct12_i)
+
+                        12'd0: begin // ecall
+                            ecall_instr_o = 1'b1;
+                            cause_o       = 4'b1011; // M-mode ecall → mcause 11
+                        end
+
+                        12'd770: begin
+                            mret_instr_o = 1'b1;
+                        end
+
+                        default: ;
+
+                    endcase
                     
                 end
 

@@ -13,10 +13,11 @@
 module control_unit
 (
     // Input interface.
-    input  logic [6:0] op_i,
-    input  logic [2:0] func3_i,
-    input  logic       func7_5_i,
-    input  logic       instr_25_i,
+    input  logic [6:0]  op_i,
+    input  logic [2:0]  func3_i,
+    input  logic        func7_5_i,
+    input  logic        instr_25_i,
+    input  logic [11:0] funct12_i,
 
     // Output interface.
     output logic [2:0] imm_src_o,
@@ -31,6 +32,7 @@ module control_unit
     output logic [1:0] forward_src_o,
     output logic       mem_access_o,
     output logic       ecall_instr_o,
+    output logic       mret_instr_o,
     output logic [3:0] cause_o,
     output logic       load_instr_o,
     output logic       is_mdu_op_o,
@@ -54,6 +56,7 @@ module control_unit
         .op_i            (op_i           ),
         .funct3_i        (func3_i        ),
         .instr_25_i      (instr_25_i     ),
+        .funct12_i       (funct12_i      ),
         .imm_src_o       (imm_src_o      ),
         .result_src_o    (result_src_o   ),
         .alu_op_o        (alu_op_s       ),
@@ -66,6 +69,7 @@ module control_unit
         .forward_src_o   (forward_src_o  ),
         .mem_access_o    (mem_access_o   ),
         .ecall_instr_o   (ecall_instr_o  ),
+        .mret_instr_o    (mret_instr_o   ),
         .cause_o         (cause_o        ),
         .load_instr_o    (load_instr_o   ),
         .is_mdu_op_o     (is_mdu_op_o    ),

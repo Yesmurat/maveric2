@@ -123,6 +123,7 @@ module datapath
     logic                     log_trace_dec_out_s;
     logic [INSTR_WIDTH - 1:0] instruction_log_dec_out_s;
     logic                     ecall_instr_dec_out_s;
+    logic                     mret_instr_dec_out_s;
     logic [              3:0] cause_dec_out_s;
     logic                     load_instr_dec_out_s;
 
@@ -154,6 +155,7 @@ module datapath
     logic                    branch_taken_pred_exec_in_s;
     logic                    log_trace_exec_in_s;
     logic                    ecall_instr_exec_in_s;
+    logic                    mret_instr_exec_in_s;
     logic [             3:0] cause_exec_in_s;
     logic                    load_instr_exec_in_s;
 
@@ -197,7 +199,9 @@ module datapath
 
     // Trap signals: execute → fetch (redirect) and top-level (hazard unit).
     logic                     trap_exec_out_s;
-    logic [DATA_WIDTH  - 1:0] trap_redirect_exec_out_s;
+    logic [ADDR_WIDTH  - 1:0] trap_redirect_exec_out_s;
+    logic                     mret_exec_out_s;
+    logic [ADDR_WIDTH  - 1:0] mepc_exec_out_s;
 
     // CSR read data: execute → pipe_mem → memory → pipe_wb → write_back.
     logic [DATA_WIDTH  - 1:0] csr_rdata_exec_out_s;
@@ -302,7 +306,9 @@ module datapath
         .log_trace_o           (log_trace_fetch_out_s          ),
         .icache_hit_o          (icache_hit_o                   ),
         .trap_i                (trap_exec_out_s                ),
-        .trap_redirect_i       (trap_redirect_exec_out_s       )
+        .mret_i                (mret_exec_out_s                ),
+        .mtvec_i               (trap_redirect_exec_out_s       ),
+        .mepc_i                (mepc_exec_out_s                )
     );
 
     //------------------------------------------------------------------------------
@@ -370,6 +376,7 @@ module datapath
         .log_trace_o           (log_trace_dec_out_s          ),
         .instruction_log_o     (instruction_log_dec_out_s    ),
         .ecall_instr_o         (ecall_instr_dec_out_s        ),
+        .mret_instr_o          (mret_instr_dec_out_s         ),
         .cause_o               (cause_dec_out_s              ),
         .a0_reg_o              (a0_reg_s                     ),
         .load_instr_o          (load_instr_dec_out_s         ),
@@ -413,6 +420,7 @@ module datapath
         .btb_way_i             (btb_way_dec_out_s            ),
         .branch_pred_taken_i   (branch_taken_pred_dec_out_s  ),
         .ecall_instr_i         (ecall_instr_dec_out_s        ),
+        .mret_instr_i          (mret_instr_dec_out_s         ),
         .cause_i               (cause_dec_out_s              ),
         .load_instr_i          (load_instr_dec_out_s         ),
         .is_mdu_op_i           (is_mdu_op_dec_out_s          ),
@@ -445,6 +453,7 @@ module datapath
         .btb_way_o             (btb_way_exec_in_s            ),
         .branch_pred_taken_o   (branch_taken_pred_exec_in_s  ),
         .ecall_instr_o         (ecall_instr_exec_in_s        ),
+        .mret_instr_o          (mret_instr_exec_in_s         ),
         .cause_o               (cause_exec_in_s              ),
         .load_instr_o          (load_instr_exec_in_s         ),
         .is_mdu_op_o           (is_mdu_op_exec_in_s          ),
@@ -487,6 +496,7 @@ module datapath
         .pc_target_addr_pred_i (pc_target_addr_pred_exec_in_s),
         .btb_way_i             (btb_way_exec_in_s            ),
         .ecall_instr_i         (ecall_instr_exec_in_s        ),
+        .mret_instr_i          (mret_instr_exec_in_s         ),
         .cause_i               (cause_exec_in_s              ),
         .branch_pred_taken_i   (branch_taken_pred_exec_in_s  ),
         .log_trace_i           (log_trace_exec_in_s          ),
@@ -523,7 +533,9 @@ module datapath
         .mdu_busy_o            (mdu_busy_exec_out_s          ),
         .csr_rdata_o           (csr_rdata_exec_out_s         ),
         .trap_o                (trap_exec_out_s              ),
-        .trap_redirect_o       (trap_redirect_exec_out_s     )
+        .mtvec_o               (trap_redirect_exec_out_s     ),
+        .mret_o                (mret_exec_out_s              ),
+        .mepc_o                (mepc_exec_out_s              )
     );
 
     assign pc_target_addr_fetch_in_s = pc_new_exec_out_s;
@@ -736,7 +748,7 @@ module datapath
     assign rd_addr_wb_o          = rd_addr_wb_out_s;
     assign branch_mispred_exec_o = branch_mispred_fetch_in_s;
     assign mdu_busy_exec_o       = mdu_busy_exec_out_s;
-    assign trap_exec_o           = trap_exec_out_s;
+    assign trap_exec_o           = trap_exec_out_s | mret_exec_out_s;
 
     // Pipeline between Dec & Exec.
     assign rs1_addr_dec_o = rs1_addr_dec_out_s;

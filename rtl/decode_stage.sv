@@ -56,6 +56,7 @@ module decode_stage
     output logic [              1:0] btb_way_o,
     output logic                     branch_pred_taken_o,
     output logic                     ecall_instr_o,
+    output logic                     mret_instr_o,
     output logic                     log_trace_o,
     output logic [INSTR_WIDTH - 1:0] instruction_log_o,
     output logic [              3:0] cause_o,
@@ -77,6 +78,7 @@ module decode_stage
     logic [2 :0] func3_s;
     logic        func7_5_s;
     logic        instr_25_s;
+    logic [11:0] funct12_s;
 
     //
     logic        reg_we_s;
@@ -100,6 +102,7 @@ module decode_stage
     assign func7_5_s  = instruction_i [30   ];
     assign instr_25_s = instruction_i [25   ];
     assign imm_data_s = instruction_i [31:7 ];
+    assign funct12_s  = instruction_i [31:20];
 
     assign rs1_addr_s = instruction_i [19:15];
     assign rs2_addr_s = instruction_i [24:20];
@@ -115,10 +118,11 @@ module decode_stage
 
     // Control unit.
     control_unit CU0 (
-        .op_i            (op_s           ),
-        .func3_i         (func3_s        ),
-        .func7_5_i       (func7_5_s      ),
-        .instr_25_i      (instr_25_s     ),
+        .op_i            (op_s                      ),
+        .func3_i         (func3_s                   ),
+        .func7_5_i       (func7_5_s                 ),
+        .instr_25_i      (instr_25_s                ),
+        .funct12_i       (funct12_s                 ),
         .imm_src_o       (imm_src_s      ),
         .result_src_o    (result_src_o   ),
         .alu_control_o   (alu_control_o  ),
@@ -131,6 +135,7 @@ module decode_stage
         .forward_src_o   (forward_src_o  ),
         .mem_access_o    (mem_access_o   ),
         .ecall_instr_o   (ecall_instr_o  ),
+        .mret_instr_o    (mret_instr_o   ),
         .cause_o         (cause_o        ),
         .load_instr_o    (load_instr_o   ),
         .is_mdu_op_o     (is_mdu_op_o    ),

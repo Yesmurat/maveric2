@@ -47,6 +47,7 @@ module execute_stage
     input  logic [ADDR_WIDTH - 1:0] pc_target_addr_pred_i,
     input  logic [             1:0] btb_way_i,
     input  logic                    ecall_instr_i,
+    input  logic                    mret_instr_i,
     input  logic [             3:0] cause_i,
     input  logic                    branch_pred_taken_i,
     input  logic                    log_trace_i,
@@ -84,8 +85,10 @@ module execute_stage
     output logic                    load_instr_o,
     output logic                    mdu_busy_o,
     output logic [DATA_WIDTH - 1:0] csr_rdata_o,
-    output logic                    trap_o,
-    output logic [DATA_WIDTH - 1:0] trap_redirect_o
+    output logic                    trap_o,   // trap
+    output logic [DATA_WIDTH - 1:0] mtvec_o, //  entry.
+    output logic                    mret_o,  // return
+    output logic [DATA_WIDTH - 1:0] mepc_o  //  from trap.
 );
 
     //-------------------------------------
@@ -106,6 +109,9 @@ module execute_stage
     logic [DATA_WIDTH - 1:0] trap_cause_s;
     logic [ADDR_WIDTH - 1:0] rs1_plus_imm_s;
     logic [ADDR_WIDTH - 1:0] pc_target_addr_s;
+
+    logic [ADDR_WIDTH - 1:0] mtvec_s;
+    logic [ADDR_WIDTH - 1:0] mepc_s;
 
     logic zero_flag_s;
     logic lt_flag_s;
@@ -225,10 +231,13 @@ module execute_stage
         .trap_i        (trap_o         ),
         .trap_pc_i     (trap_pc_s      ),
         .trap_cause_i  (trap_cause_s   ),
-        .mtvec_o       (trap_redirect_o)
+        .mret_instr_i  (mret_instr_i   ),
+        .mtvec_o       (mtvec_s        ),
+        .mepc_o        (mepc_s         )
     );
 
-    assign csr_rdata_o = csr_rdata_s;
+    assign trap_pc_s    = pc_i;
+    assign trap_cause_s = {60'b0, cause_i};
 
     //--------------------------------------------------
     // Branch decision & misprediction detection logic.
@@ -283,8 +292,10 @@ module execute_stage
     assign cause_o          = cause_i;
 
     assign trap_o       = ecall_instr_i;
-    assign trap_pc_s    = pc_i;
-    assign trap_cause_s = {60'b0, cause_i};
+    assign mret_o       = mret_instr_i;
+    assign mepc_o       = mepc_s;
+    assign mtvec_o      = mtvec_s;
+    assign csr_rdata_o  = csr_rdata_s;
 
     // Log trace.
     assign log_trace_o = log_trace_i;
