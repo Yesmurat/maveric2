@@ -21,6 +21,7 @@ Machine Information Registers (read-only)
 Machine Trap Setup (read/write)
     0x300  mstatus     MPP hardwired 11 (M-mode only)
     0x301  misa        RV64IM         -> see MISA_VAL
+    0x305: mtvec       Machine trap-handler base address.
 
 Machine Trap Handling (read/write)
     0x340  mscratch    Machine scratch register
