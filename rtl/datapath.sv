@@ -199,7 +199,7 @@ module datapath
 
     // Trap signals: execute → fetch (redirect) and top-level (hazard unit).
     logic                     trap_exec_out_s;
-    logic [ADDR_WIDTH  - 1:0] trap_redirect_exec_out_s;
+    logic [ADDR_WIDTH  - 1:0] mtvec_exec_out_s;
     logic                     mret_exec_out_s;
     logic [ADDR_WIDTH  - 1:0] mepc_exec_out_s;
 
@@ -307,7 +307,7 @@ module datapath
         .icache_hit_o          (icache_hit_o                   ),
         .trap_i                (trap_exec_out_s                ),
         .mret_i                (mret_exec_out_s                ),
-        .mtvec_i               (trap_redirect_exec_out_s       ),
+        .mtvec_i               (mtvec_exec_out_s               ),
         .mepc_i                (mepc_exec_out_s                )
     );
 
@@ -533,7 +533,7 @@ module datapath
         .mdu_busy_o            (mdu_busy_exec_out_s          ),
         .csr_rdata_o           (csr_rdata_exec_out_s         ),
         .trap_o                (trap_exec_out_s              ),
-        .mtvec_o               (trap_redirect_exec_out_s     ),
+        .mtvec_o               (mtvec_exec_out_s             ),
         .mret_o                (mret_exec_out_s              ),
         .mepc_o                (mepc_exec_out_s              )
     );
