@@ -54,8 +54,8 @@ module main_decoder
         U_Type_ALU  = 4'd9,
         U_Type_LOAD = 4'd10,
         SYSTEM      = 4'd11,
-        DEF         = 4'd12,
-        FENCE       = 4'd13
+        FENCE       = 4'd12,
+        DEF         = 4'd13
     } t_instruction;
 
     // Instruction decoder signal.
@@ -218,6 +218,8 @@ module main_decoder
 
             end
             
+            FENCE: ;
+
             FENCE: ;
 
             DEF: begin
