@@ -52,7 +52,8 @@ module main_decoder
         U_Type_ALU  = 4'd9,
         U_Type_LOAD = 4'd10,
         SYSTEM      = 4'd11,
-        DEF         = 4'd12
+        FENCE       = 4'd12,
+        DEF         = 4'd13
     } t_instruction;
 
     // Instruction decoder signal.
@@ -75,6 +76,7 @@ module main_decoder
             7'b0010111: instr_type_s = U_Type_ALU;
             7'b0110111: instr_type_s = U_Type_LOAD;
             7'b1110011: instr_type_s = SYSTEM;
+            7'b0001111: instr_type_s = FENCE;
             default   : instr_type_s = DEF;
         endcase
     end
@@ -202,6 +204,8 @@ module main_decoder
                 end
 
             end
+
+            FENCE: ;
 
             DEF: begin
                 if (op_i != 7'b0000000) begin
