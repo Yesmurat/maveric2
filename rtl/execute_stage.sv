@@ -85,7 +85,7 @@ module execute_stage
     output logic                    mdu_busy_o,
     output logic [DATA_WIDTH - 1:0] csr_rdata_o,
     output logic                    trap_o,
-    output logic [DATA_WIDTH - 1:0] trap_redirect_o
+    output logic [DATA_WIDTH - 1:0] mtvec_o
 );
 
     //-------------------------------------
@@ -225,7 +225,7 @@ module execute_stage
         .trap_i        (trap_o         ),
         .trap_pc_i     (trap_pc_s      ),
         .trap_cause_i  (trap_cause_s   ),
-        .mtvec_o       (trap_redirect_o)
+        .mtvec_o       (mtvec_o        )
     );
 
     assign csr_rdata_o = csr_rdata_s;

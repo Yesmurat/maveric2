@@ -197,7 +197,7 @@ module datapath
 
     // Trap signals: execute → fetch (redirect) and top-level (hazard unit).
     logic                     trap_exec_out_s;
-    logic [DATA_WIDTH  - 1:0] trap_redirect_exec_out_s;
+    logic [DATA_WIDTH  - 1:0] mtvec_exec_out_s;
 
     // CSR read data: execute → pipe_mem → memory → pipe_wb → write_back.
     logic [DATA_WIDTH  - 1:0] csr_rdata_exec_out_s;
@@ -302,7 +302,7 @@ module datapath
         .log_trace_o           (log_trace_fetch_out_s          ),
         .icache_hit_o          (icache_hit_o                   ),
         .trap_i                (trap_exec_out_s                ),
-        .trap_redirect_i       (trap_redirect_exec_out_s       )
+        .mtvec_i               (mtvec_exec_out_s               )
     );
 
     //------------------------------------------------------------------------------
@@ -523,7 +523,7 @@ module datapath
         .mdu_busy_o            (mdu_busy_exec_out_s          ),
         .csr_rdata_o           (csr_rdata_exec_out_s         ),
         .trap_o                (trap_exec_out_s              ),
-        .trap_redirect_o       (trap_redirect_exec_out_s     )
+        .mtvec_o               (mtvec_exec_out_s             )
     );
 
     assign pc_target_addr_fetch_in_s = pc_new_exec_out_s;
