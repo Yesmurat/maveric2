@@ -38,7 +38,8 @@ module control_unit
     output logic       is_mdu_op_o,
     output logic       is_mdu_word_op_o,
     output logic       csr_instr_o,
-    output logic       csr_imm_o
+    output logic       csr_imm_o,
+    output logic       mret_instr_o
 );
 
     //------------------
@@ -55,6 +56,7 @@ module control_unit
     main_decoder M_DEC (
         .op_i            (op_i           ),
         .funct3_i        (func3_i        ),
+        .funct12_i       (funct12_i      ),
         .instr_25_i      (instr_25_i     ),
         .funct12_i       (funct12_i      ),
         .imm_src_o       (imm_src_o      ),
@@ -75,7 +77,8 @@ module control_unit
         .is_mdu_op_o     (is_mdu_op_o    ),
         .is_mdu_word_op_o(is_mdu_word_op_o),
         .csr_instr_o     (csr_instr_o    ),
-        .csr_imm_o       (csr_imm_o      )
+        .csr_imm_o       (csr_imm_o      ),
+        .mret_instr_o    (mret_instr_o   )
     );
 
     // ALU decoder.

@@ -58,6 +58,7 @@ module pipeline_reg_execute
     input  logic                     csr_instr_i,
     input  logic                     csr_imm_i,
     input  logic [             11:0] csr_addr_i,
+    input  logic                     mret_instr_i,
 
     // Output interface.
     output logic [INSTR_WIDTH - 1:0] instruction_log_o,
@@ -92,7 +93,8 @@ module pipeline_reg_execute
     output logic                     is_mdu_word_op_o,
     output logic                     csr_instr_o,
     output logic                     csr_imm_o,
-    output logic [             11:0] csr_addr_o
+    output logic [             11:0] csr_addr_o,
+    output logic                     mret_instr_o
 );
 
     // Write logic.
@@ -131,6 +133,7 @@ module pipeline_reg_execute
             csr_instr_o           <= '0;
             csr_imm_o             <= '0;
             csr_addr_o            <= '0;
+            mret_instr_o          <= '0;
         end else if (flush_exec_i) begin
             instruction_log_o     <= '0;
             log_trace_o           <= '0;
@@ -165,6 +168,7 @@ module pipeline_reg_execute
             csr_instr_o           <= '0;
             csr_imm_o             <= '0;
             csr_addr_o            <= '0;
+            mret_instr_o          <= '0;
         end else if (~ stall_exec_i) begin
             instruction_log_o     <= instruction_log_i;
             log_trace_o           <= log_trace_i;
@@ -199,6 +203,7 @@ module pipeline_reg_execute
             csr_instr_o           <= csr_instr_i;
             csr_imm_o             <= csr_imm_i;
             csr_addr_o            <= csr_addr_i;
+            mret_instr_o          <= mret_instr_i;
         end
     end
 
