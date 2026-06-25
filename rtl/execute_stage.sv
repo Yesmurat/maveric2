@@ -55,6 +55,7 @@ module execute_stage
     input  logic                    csr_instr_i,
     input  logic                    csr_imm_i,
     input  logic [            11:0] csr_addr_i,
+    input  logic                    mret_instr_i,
 
     // Output interface.
     output logic [ADDR_WIDTH - 1:0] pc_log_o,
@@ -85,7 +86,9 @@ module execute_stage
     output logic                    mdu_busy_o,
     output logic [DATA_WIDTH - 1:0] csr_rdata_o,
     output logic                    trap_o,
-    output logic [DATA_WIDTH - 1:0] mtvec_o
+    output logic [DATA_WIDTH - 1:0] mtvec_o,
+    output logic                    mret_o,
+    output logic [DATA_WIDTH - 1:0] mepc_o
 );
 
     //-------------------------------------
@@ -104,6 +107,7 @@ module execute_stage
     logic [DATA_WIDTH - 1:0] csr_src_s;
     logic [DATA_WIDTH - 1:0] trap_pc_s;
     logic [DATA_WIDTH - 1:0] trap_cause_s;
+    logic [DATA_WIDTH - 1:0] mepc_s;
     logic [ADDR_WIDTH - 1:0] rs1_plus_imm_s;
     logic [ADDR_WIDTH - 1:0] pc_target_addr_s;
 
@@ -225,7 +229,9 @@ module execute_stage
         .trap_i        (trap_o         ),
         .trap_pc_i     (trap_pc_s      ),
         .trap_cause_i  (trap_cause_s   ),
-        .mtvec_o       (mtvec_o        )
+        .mtvec_o       (mtvec_o        ),
+        .mret_instr_i  (mret_instr_i   ),
+        .mepc_o        (mepc_s         )
     );
 
     assign csr_rdata_o = csr_rdata_s;
@@ -283,6 +289,8 @@ module execute_stage
     assign cause_o          = cause_i;
 
     assign trap_o       = ecall_instr_i;
+    assign mret_o       = mret_instr_i;
+    assign mepc_o       = mepc_s;
     assign trap_pc_s    = pc_i;
     assign trap_cause_s = {60'b0, cause_i};
 

@@ -199,6 +199,12 @@ module datapath
     logic                     trap_exec_out_s;
     logic [DATA_WIDTH  - 1:0] mtvec_exec_out_s;
 
+    // mret signals: decode → pipe_exec → execute → fetch.
+    logic                     mret_instr_dec_out_s;
+    logic                     mret_instr_exec_in_s;
+    logic                     mret_exec_out_s;
+    logic [DATA_WIDTH  - 1:0] mepc_exec_out_s;
+
     // CSR read data: execute → pipe_mem → memory → pipe_wb → write_back.
     logic [DATA_WIDTH  - 1:0] csr_rdata_exec_out_s;
     logic [DATA_WIDTH  - 1:0] csr_rdata_mem_in_s;
@@ -302,7 +308,9 @@ module datapath
         .log_trace_o           (log_trace_fetch_out_s          ),
         .icache_hit_o          (icache_hit_o                   ),
         .trap_i                (trap_exec_out_s                ),
-        .mtvec_i               (mtvec_exec_out_s               )
+        .mtvec_i               (mtvec_exec_out_s               ),
+        .mret_i                (mret_exec_out_s                ),
+        .mepc_i                (mepc_exec_out_s                )
     );
 
     //------------------------------------------------------------------------------
@@ -377,7 +385,8 @@ module datapath
         .is_mdu_word_op_o      (is_mdu_word_op_dec_out_s     ),
         .csr_instr_o           (csr_instr_dec_out_s          ),
         .csr_imm_o             (csr_imm_dec_out_s            ),
-        .csr_addr_o            (csr_addr_dec_out_s           )
+        .csr_addr_o            (csr_addr_dec_out_s           ),
+        .mret_instr_o          (mret_instr_dec_out_s         )
     );
 
     //-------------------------------------------------------------------------------
@@ -420,6 +429,7 @@ module datapath
         .csr_instr_i           (csr_instr_dec_out_s          ),
         .csr_imm_i             (csr_imm_dec_out_s            ),
         .csr_addr_i            (csr_addr_dec_out_s           ),
+        .mret_instr_i          (mret_instr_dec_out_s         ),
         .instruction_log_o     (instruction_log_exec_out_s   ),
         .log_trace_o           (log_trace_exec_in_s          ),
         .result_src_o          (result_src_exec_in_s         ),
@@ -451,7 +461,8 @@ module datapath
         .is_mdu_word_op_o      (is_mdu_word_op_exec_in_s     ),
         .csr_instr_o           (csr_instr_exec_in_s          ),
         .csr_imm_o             (csr_imm_exec_in_s            ),
-        .csr_addr_o            (csr_addr_exec_in_s           )
+        .csr_addr_o            (csr_addr_exec_in_s           ),
+        .mret_instr_o          (mret_instr_exec_in_s         )
     );
 
     //-------------------------------------
@@ -495,6 +506,7 @@ module datapath
         .csr_instr_i           (csr_instr_exec_in_s          ),
         .csr_imm_i             (csr_imm_exec_in_s            ),
         .csr_addr_i            (csr_addr_exec_in_s           ),
+        .mret_instr_i          (mret_instr_exec_in_s         ),
         .pc_log_o              (pc_log_exec_out_s            ),
         .pc_plus4_o            (pc_plus4_exec_out_s          ),
         .pc_new_o              (pc_new_exec_out_s            ),
@@ -523,7 +535,9 @@ module datapath
         .mdu_busy_o            (mdu_busy_exec_out_s          ),
         .csr_rdata_o           (csr_rdata_exec_out_s         ),
         .trap_o                (trap_exec_out_s              ),
-        .mtvec_o               (mtvec_exec_out_s             )
+        .mtvec_o               (mtvec_exec_out_s             ),
+        .mret_o                (mret_exec_out_s              ),
+        .mepc_o                (mepc_exec_out_s              )
     );
 
     assign pc_target_addr_fetch_in_s = pc_new_exec_out_s;
@@ -736,7 +750,7 @@ module datapath
     assign rd_addr_wb_o          = rd_addr_wb_out_s;
     assign branch_mispred_exec_o = branch_mispred_fetch_in_s;
     assign mdu_busy_exec_o       = mdu_busy_exec_out_s;
-    assign trap_exec_o           = trap_exec_out_s;
+    assign trap_exec_o           = trap_exec_out_s | mret_exec_out_s;
 
     // Pipeline between Dec & Exec.
     assign rs1_addr_dec_o = rs1_addr_dec_out_s;

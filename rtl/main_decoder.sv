@@ -13,9 +13,10 @@
 module main_decoder
 (
     // Input interface.
-    input  logic [6:0] op_i,
-    input  logic [2:0] funct3_i,
-    input  logic       instr_25_i,
+    input  logic [6:0]  op_i,
+    input  logic [2:0]  funct3_i,
+    input  logic [11:0] funct12_i,
+    input  logic        instr_25_i,
 
     // Output interface.
     output logic [2:0] imm_src_o,
@@ -35,7 +36,8 @@ module main_decoder
     output logic       is_mdu_op_o,
     output logic       is_mdu_word_op_o,
     output logic       csr_instr_o,
-    output logic       csr_imm_o
+    output logic       csr_imm_o,
+    output logic       mret_instr_o
 );
 
     // Instruction type.
@@ -109,6 +111,7 @@ module main_decoder
         is_mdu_word_op_o = 1'b0;
         csr_instr_o      = 1'b0;
         csr_imm_o        = 1'b0;
+        mret_instr_o     = 1'b0;
 
         case (instr_type_s)
             I_Type: begin
@@ -185,12 +188,12 @@ module main_decoder
             SYSTEM: begin
 
                 if (funct3_i == 3'b000) begin
-
-                    // ecall for now.
-                    // Later, distinguish between ecall, ebreak, sret, mret.
-                    ecall_instr_o = 1'b1;
-                    cause_o       = 4'b1011; // M-mode ecall → mcause 11
-                    
+                    case (funct12_i)
+                        12'd0:   begin ecall_instr_o = 1'b1; cause_o = 4'b1011; end // ecall  (mcause=11)
+                        12'd1:   begin ecall_instr_o = 1'b1; cause_o = 4'b0011; end // ebreak (mcause=3)
+                        12'd770: mret_instr_o = 1'b1;                               // mret
+                        default: ;
+                    endcase
                 end
 
                 else begin // CSR instructions
@@ -228,6 +231,7 @@ module main_decoder
                 load_instr_o    = 1'b0;
                 csr_instr_o     = 1'b0;
                 csr_imm_o       = 1'b0;
+                mret_instr_o    = 1'b0;
             end
         endcase
     end

@@ -54,7 +54,11 @@ module csr_regfile
     input  logic [DATA_WIDTH - 1:0]  trap_pc_i,     // saved to mepc
     input  logic [DATA_WIDTH - 1:0]  trap_cause_i, // saved to mcause
 
-    output logic [DATA_WIDTH - 1:0]  mtvec_o     // fetch stage reads this for redirect
+    output logic [DATA_WIDTH - 1:0]  mtvec_o,    // fetch stage reads this for redirect
+
+    // mret handling.
+    input  logic                     mret_instr_i,
+    output logic [DATA_WIDTH - 1:0]  mepc_o
 
 );
 
@@ -90,15 +94,19 @@ module csr_regfile
 
             mepc_r           <= trap_pc_i;
             mcause_r         <= trap_cause_i;
-            mstatus_r[7]     <= mstatus_r[3];
-            mstatus_r[3]     <= 1'b0;
-            mstatus_r[12:11] <= 2'b11;
-            // MIE is mstatus[3];
-            // MPIE is mstatus[7];
-            // MPP is mstatus[12:11];
-            
+            mstatus_r[7]     <= mstatus_r[3]; // MPIE ← MIE
+            mstatus_r[3]     <= 1'b0;         // MIE ← 0
+            mstatus_r[12:11] <= 2'b11;        // MPP stays 11
+
         end
-        
+
+        else if (mret_instr_i) begin
+
+            mstatus_r[3] <= mstatus_r[7]; // MIE ← MPIE
+            mstatus_r[7] <= 1'b1;         // MPIE ← 1
+
+        end
+
         else if (we_i) begin
 
             case (waddr_i)
@@ -147,5 +155,6 @@ module csr_regfile
     end
 
     assign mtvec_o = {mtvec_r[DATA_WIDTH-1:2], 2'b00};
+    assign mepc_o  = mepc_r;
 
 endmodule
