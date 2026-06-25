@@ -228,3 +228,4 @@ snippy/snippy-sw.elf
 snippy/snippy-xor.elf
 snippy/snippy-xori.elf
 custom/csr_test.elf
+custom/mret-test.elf
