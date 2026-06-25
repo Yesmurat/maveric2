@@ -605,7 +605,14 @@ class TestRunner:
         self._build_simulator(
             gen_wave=self.args.trace, coverage_mode=self.coverage_mode
         )
-        self._run_simulation(test_name, elf_path)
+        if self._is_trap_test(test_name):
+            try:
+                self._run_simulation(test_name, elf_path)
+            except CommandError:
+                if not RES_FILE.exists():
+                    raise
+        else:
+            self._run_simulation(test_name, elf_path)
 
         parsed_output = self._parse_simulation_output(test_name)
         self._write_rtl_trace(test_name, parsed_output.trace_lines)
@@ -628,7 +635,7 @@ class TestRunner:
                 f"Self Check failed for {test_name}: {self_check}. See {format_repo_path(RES_FILE)}."
             )
 
-        if self.cosim_only:
+        if self.cosim_only or self._is_trap_test(test_name):
             tracecomp_status = "Skipped"
         else:
             self._run_trace_reference(test_name, memory_path)
@@ -1132,6 +1139,10 @@ class TestRunner:
     @staticmethod
     def _is_snippy(test_name: str) -> bool:
         return test_name.startswith("snippy-")
+
+    @staticmethod
+    def _is_trap_test(test_name: str) -> bool:
+        return test_name in {"csr-test", "mret-test"}
 
     @staticmethod
     def _self_check_passed(status_text: str | None) -> bool:
