@@ -207,8 +207,6 @@ module main_decoder
                 end
 
             end
-            
-            FENCE: ;
 
             FENCE: ;
 

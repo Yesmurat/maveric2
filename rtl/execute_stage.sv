@@ -47,7 +47,6 @@ module execute_stage
     input  logic [ADDR_WIDTH - 1:0] pc_target_addr_pred_i,
     input  logic [             1:0] btb_way_i,
     input  logic                    ecall_instr_i,
-    input  logic                    mret_instr_i,
     input  logic [             3:0] cause_i,
     input  logic                    branch_pred_taken_i,
     input  logic                    log_trace_i,
@@ -111,9 +110,6 @@ module execute_stage
     logic [DATA_WIDTH - 1:0] mepc_s;
     logic [ADDR_WIDTH - 1:0] rs1_plus_imm_s;
     logic [ADDR_WIDTH - 1:0] pc_target_addr_s;
-
-    logic [ADDR_WIDTH - 1:0] mtvec_s;
-    logic [ADDR_WIDTH - 1:0] mepc_s;
 
     logic zero_flag_s;
     logic lt_flag_s;
@@ -238,8 +234,7 @@ module execute_stage
         .mepc_o        (mepc_s         )
     );
 
-    assign trap_pc_s    = pc_i;
-    assign trap_cause_s = {60'b0, cause_i};
+    assign csr_rdata_o = csr_rdata_s;
 
     //--------------------------------------------------
     // Branch decision & misprediction detection logic.

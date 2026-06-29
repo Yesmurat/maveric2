@@ -123,7 +123,6 @@ module datapath
     logic                     log_trace_dec_out_s;
     logic [INSTR_WIDTH - 1:0] instruction_log_dec_out_s;
     logic                     ecall_instr_dec_out_s;
-    logic                     mret_instr_dec_out_s;
     logic [              3:0] cause_dec_out_s;
     logic                     load_instr_dec_out_s;
 
@@ -155,7 +154,6 @@ module datapath
     logic                    branch_taken_pred_exec_in_s;
     logic                    log_trace_exec_in_s;
     logic                    ecall_instr_exec_in_s;
-    logic                    mret_instr_exec_in_s;
     logic [             3:0] cause_exec_in_s;
     logic                    load_instr_exec_in_s;
 
@@ -380,7 +378,6 @@ module datapath
         .log_trace_o           (log_trace_dec_out_s          ),
         .instruction_log_o     (instruction_log_dec_out_s    ),
         .ecall_instr_o         (ecall_instr_dec_out_s        ),
-        .mret_instr_o          (mret_instr_dec_out_s         ),
         .cause_o               (cause_dec_out_s              ),
         .a0_reg_o              (a0_reg_s                     ),
         .load_instr_o          (load_instr_dec_out_s         ),
@@ -425,7 +422,6 @@ module datapath
         .btb_way_i             (btb_way_dec_out_s            ),
         .branch_pred_taken_i   (branch_taken_pred_dec_out_s  ),
         .ecall_instr_i         (ecall_instr_dec_out_s        ),
-        .mret_instr_i          (mret_instr_dec_out_s         ),
         .cause_i               (cause_dec_out_s              ),
         .load_instr_i          (load_instr_dec_out_s         ),
         .is_mdu_op_i           (is_mdu_op_dec_out_s          ),
@@ -459,7 +455,6 @@ module datapath
         .btb_way_o             (btb_way_exec_in_s            ),
         .branch_pred_taken_o   (branch_taken_pred_exec_in_s  ),
         .ecall_instr_o         (ecall_instr_exec_in_s        ),
-        .mret_instr_o          (mret_instr_exec_in_s         ),
         .cause_o               (cause_exec_in_s              ),
         .load_instr_o          (load_instr_exec_in_s         ),
         .is_mdu_op_o           (is_mdu_op_exec_in_s          ),
@@ -503,7 +498,6 @@ module datapath
         .pc_target_addr_pred_i (pc_target_addr_pred_exec_in_s),
         .btb_way_i             (btb_way_exec_in_s            ),
         .ecall_instr_i         (ecall_instr_exec_in_s        ),
-        .mret_instr_i          (mret_instr_exec_in_s         ),
         .cause_i               (cause_exec_in_s              ),
         .branch_pred_taken_i   (branch_taken_pred_exec_in_s  ),
         .log_trace_i           (log_trace_exec_in_s          ),

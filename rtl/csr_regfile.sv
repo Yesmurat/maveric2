@@ -21,7 +21,6 @@ Machine Information Registers (read-only)
 Machine Trap Setup (read/write)
     0x300  mstatus     MPP hardwired 11 (M-mode only)
     0x301  misa        RV64IM         -> see MISA_VAL
-    0x305: mtvec       Machine trap-handler base address.
 
 Machine Trap Handling (read/write)
     0x340  mscratch    Machine scratch register
@@ -54,7 +53,6 @@ module csr_regfile
     input  logic                     trap_i,
     input  logic [DATA_WIDTH - 1:0]  trap_pc_i,     // saved to mepc
     input  logic [DATA_WIDTH - 1:0]  trap_cause_i, // saved to mcause
-    input  logic                     mret_instr_i,
 
     output logic [DATA_WIDTH - 1:0]  mtvec_o,    // fetch stage reads this for redirect
 
@@ -64,22 +62,13 @@ module csr_regfile
 
 );
 
-    localparam logic [11:0] CSR_MVENDORID = 12'hF11,
-                            CSR_MARCHID   = 12'hF12,
-                            CSR_MIMPID    = 12'hF13,
-                            CSR_MHARTID   = 12'hF14,
-                            CSR_MSTATUS   = 12'h300,
-                            CSR_MISA      = 12'h301,
-                            CSR_MTVEC     = 12'h305,
-                            CSR_MSCRATCH  = 12'h340,
-                            CSR_MEPC      = 12'h341,
-                            CSR_MCAUSE    = 12'h342;
+    // misa: MXL=2 (RV64) at bits [63:62], extensions I (bit 8) + M (bit 12).
+    localparam logic [DATA_WIDTH-1:0] MISA_VAL =
+        (2 << 62) | (1 << 8) | (1 << 12);  // RV64IM
 
-    // MXL=2 (RV64) at bits[63:62], I at bit 8, M at bit 12
-    localparam logic [DATA_WIDTH-1:0] MISA_VAL     = 64'h8000_0000_0000_1100;
-
-    // MPP[12:11] = 2'b11 (M-mode)
-    localparam logic [DATA_WIDTH-1:0] MSTATUS_RESET = 64'h0000_0000_0000_1800;
+    // mstatus: MPP = 2'b11 (M-mode only), all other fields 0.
+    localparam logic [DATA_WIDTH-1:0] MSTATUS_RESET =
+        (64'd3 << 11);  // MPP[12:11] = 11
 
     // Writable registers.
     logic [DATA_WIDTH - 1:0] mstatus_r;
@@ -122,11 +111,14 @@ module csr_regfile
 
             case (waddr_i)
 
-                CSR_MTVEC    : mtvec_r    <= wdata_i;
-                CSR_MSTATUS  : mstatus_r  <= (wdata_i & ~(64'd3 << 11)) | MSTATUS_RESET;
-                CSR_MSCRATCH : mscratch_r <= wdata_i;
-                CSR_MEPC     : mepc_r     <= wdata_i;
-                CSR_MCAUSE   : mcause_r   <= wdata_i;
+                12'h305: mtvec_r    <= wdata_i;
+
+                // mstatus: accept writes but keep MPP fixed at 11 (WARL).
+                12'h300: mstatus_r  <= (wdata_i & ~(64'd3 << 11)) | MSTATUS_RESET;
+
+                12'h340: mscratch_r <= wdata_i;
+                12'h341: mepc_r     <= wdata_i;
+                12'h342: mcause_r   <= wdata_i;
                 default: ; // all other writes silently ignored
 
             endcase
@@ -141,20 +133,20 @@ module csr_regfile
         case (raddr_i)
     
             // Machine Information Registers
-            CSR_MVENDORID : rdata_o = '0;                    // mvendorid
-            CSR_MARCHID   : rdata_o = '0;                    // marchid
-            CSR_MIMPID    : rdata_o = 64'd1;                 // mimpid
-            CSR_MHARTID   : rdata_o = '0;                    // mhartid
+            12'hF11: rdata_o = '0;                    // mvendorid
+            12'hF12: rdata_o = '0;                    // marchid
+            12'hF13: rdata_o = 64'd1;                 // mimpid
+            12'hF14: rdata_o = '0;                    // mhartid
 
             // Machine Trap Setup
-            CSR_MSTATUS   : rdata_o = mstatus_r;             // mstatus
-            CSR_MISA      : rdata_o = MISA_VAL;              // misa
-            CSR_MTVEC     : rdata_o = mtvec_r;               // mtvec
+            12'h300: rdata_o = mstatus_r;             // mstatus
+            12'h301: rdata_o = MISA_VAL;              // misa
+            12'h305: rdata_o = mtvec_r;               // mtvec
 
             // Machine Trap Handling
-            CSR_MSCRATCH  : rdata_o = mscratch_r;            // mscratch
-            CSR_MEPC      : rdata_o = mepc_r;                // mepc
-            CSR_MCAUSE    : rdata_o = mcause_r;              // mcause
+            12'h340: rdata_o = mscratch_r;            // mscratch
+            12'h341: rdata_o = mepc_r;                // mepc
+            12'h342: rdata_o = mcause_r;              // mcause
 
             default: rdata_o = '0;
 
