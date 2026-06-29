@@ -210,6 +210,8 @@ module main_decoder
             
             FENCE: ;
 
+            FENCE: ;
+
             DEF: begin
                 if (op_i != 7'b0000000) begin
                     ecall_instr_o = 1'b1;

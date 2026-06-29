@@ -31,8 +31,8 @@ module fetch_stage
     input  logic [              1:0] btb_way_exec_i,
     input  logic [ADDR_WIDTH  - 1:0] pc_exec_i,
     input  logic                     trap_i,
-    input  logic                     mret_i,
     input  logic [ADDR_WIDTH  - 1:0] mtvec_i,
+    input  logic                     mret_i,
     input  logic [ADDR_WIDTH  - 1:0] mepc_i,
 
     // Output interface.
@@ -74,8 +74,8 @@ module fetch_stage
     );
 
 
-    // 2-to-1 MUX module to choose between PC from fetch and TA from exec.
-    assign pc_next_s =  trap_i           ? mtvec_i  :
+    // PC redirect priority: trap (ecall) → mret → branch mispred → fetch
+    assign pc_next_s =  trap_i           ? mtvec_i          :
                         mret_i           ? mepc_i           :
                         branch_mispred_i ? pc_target_addr_i :
                         pc_fetch_s;

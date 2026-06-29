@@ -66,7 +66,8 @@ module decode_stage
     output logic                     is_mdu_word_op_o,
     output logic                     csr_instr_o,
     output logic                     csr_imm_o,
-    output logic [             11:0] csr_addr_o
+    output logic [             11:0] csr_addr_o,
+    output logic                     mret_instr_o
 );
 
     //-------------------------------------
@@ -74,11 +75,11 @@ module decode_stage
     //-------------------------------------
 
     // Control signals.
-    logic [6 :0] op_s;
-    logic [2 :0] func3_s;
-    logic        func7_5_s;
-    logic        instr_25_s;
-    logic [11:0] funct12_s;
+    logic [6 :0]  op_s;
+    logic [2 :0]  func3_s;
+    logic         func7_5_s;
+    logic         instr_25_s;
+    logic [11:0]  funct12_s;
 
     //
     logic        reg_we_s;
@@ -118,11 +119,11 @@ module decode_stage
 
     // Control unit.
     control_unit CU0 (
-        .op_i            (op_s                      ),
-        .func3_i         (func3_s                   ),
-        .func7_5_i       (func7_5_s                 ),
-        .instr_25_i      (instr_25_s                ),
-        .funct12_i       (funct12_s                 ),
+        .op_i            (op_s           ),
+        .func3_i         (func3_s        ),
+        .func7_5_i       (func7_5_s      ),
+        .instr_25_i      (instr_25_s     ),
+        .funct12_i       (funct12_s      ),
         .imm_src_o       (imm_src_s      ),
         .result_src_o    (result_src_o   ),
         .alu_control_o   (alu_control_o  ),
@@ -141,7 +142,8 @@ module decode_stage
         .is_mdu_op_o     (is_mdu_op_o    ),
         .is_mdu_word_op_o(is_mdu_word_op_o),
         .csr_instr_o     (csr_instr_o    ),
-        .csr_imm_o       (csr_imm_o      )
+        .csr_imm_o       (csr_imm_o      ),
+        .mret_instr_o    (mret_instr_o   )
     );
 
     // Extend immediate module.
